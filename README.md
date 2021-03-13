@@ -1,5 +1,5 @@
 # PYTHON-SBI
-##Constructing Macrocomplexes
+## Constructing Macrocomplexes
 
 *Patrick Gohl, Oumout Egkemen Moustafa, Roberto Carcamo Calvo*
 
