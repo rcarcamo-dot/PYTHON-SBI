@@ -67,28 +67,5 @@ def get_molecule_type (chain):
 	return molecule_type
 
 
-def get_best_core(list_of_pdb_files):
-	""" This function selects the file containing the chain with larger number of interactions from the list of input files to act as the core for the superimposition strategy, and returns this file back. """
 
-	recount = {}
-	## Creates a dictionary with the different chains in input_directory files and count the times they appear ##
-	for file in list_of_pdb_files:
-		if file[-5] in recount:
-			recount[file[-5]] += 1
-		if file [-6] in recount:
-			recount[file[-6]] += 1
-		if file[-5] not in recount:
-			recount.setdefault(file[-5], 1)
-		if file[-6] not in recount:
-			recount.setdefault(file[-6], 1)
-	recount_sorted = {k: v for k, v in sorted(recount.items(), key=lambda item: item[1], reverse=True)} # Sorts the dictionary by its values, which represent the most frequent chain in pdb files from input_directory.
-	chains = list(recount_sorted.keys())
-	core_chain = chains[0] # Select the most frequent chain.
-	for file in list_of_pdb_files:
-		search_pattern = re.compile(core_chain) # Saves the chain id as a search pattern.
-		m = search_pattern.search(file, 5, 7) # Search the most frequent chain through all pdb files
-		if m:
-			core_chain_file = file # Select the first pdb file contaning the search pattern as core chain file.
-			break
-
-	return core_chain_file
+	
