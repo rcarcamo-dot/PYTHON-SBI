@@ -2,6 +2,14 @@ import Bio.PDB
 import gzip
 import io
 
+
+""" Essentially what is happening here is that we are receiving a 
+file along with what that file is going to be called and an indicator of 
+whether or not it is zipped. Then this files is going to be sent to a PDBParser
+which finds the chains located within the file and returns those chain objects. 
+the chain objects contain information on the structure of the chain and can be used to 
+find the sequence which in turn can be used to align. With this object we can also superimppose later on"""
+
 class File(object):
 	""" A class that takes as an input the path to a file 
 	and returns various relevant info about it """
