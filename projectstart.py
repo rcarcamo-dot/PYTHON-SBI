@@ -3,6 +3,10 @@ import argparse
 import gzip
 import os
 import FileExplorer
+import FunctionHodgepodge as FH
+import functions
+
+""" First we grab all of the user input as specified below"""
 
 parser = argparse.ArgumentParser(description = "This program is the beginning of the Python/SBI project")
 required = parser.add_argument_group('required arguments')
@@ -39,8 +43,12 @@ parser.add_argument("-v","--verbose",
 	help = "Print log in stderr")
 
 
-
+""" now we save all of the arguments to options. We call them with optons"""
 options = parser.parse_args()
+
+""" here I am simply checing whether or not the input directory is an actual folder or if something went wrong.
+If the input is not a directory I kill the program 
+Carles has this as a seperate function I believe which we can implement"""
 
 try:
 	files = os.listdir(options.input)
@@ -77,7 +85,8 @@ for file in files:
 			chainlist.append(line.strip())
 
 
-
+	""" Now I am going to go through to make sure that the chains indicated in the file header are actually found within the file
+	First I look for all of the chain names and save this information"""
 	filelocation = options.input + "/" + file
 	try:
 		if i == 1:
@@ -111,18 +120,35 @@ for file in files:
 	Allinteractions.append(file)
 
 ### Now we are going to get chain information for each of the files in the directory 
-
-AllChains = [] # We are going to save all of the chains here
+AllChains = {} # We are going to save all of the chains here
 for file in Allinteractions:
 	filepath = options.input + "/" + file
 	Zip = "FALSE"
 	if ".gz" in file:
 		Zip = "TRUE"
 	pdb = FileExplorer.pdb(filepath, file, Zip )
-	AllChains.append(pdb.get_chain())
+	AllChains[file] = pdb.get_chain()
+""" So after that last step we now have a list of chain objects from which we can retrieve information 
+This list is stored as a value inside a dictionary that has the filename from which they came from as the key"""
 
 
-print (AllChains)
+""" Now I will try to align the chains across file pairs to try and find matches
+In order to do this I will first have to get the sequences of each chain object so that I can align them."""
+
+""" Here i am going to get the sequences for each chain and save them in the dictionary that I created"""
+for file in AllChains:
+	i=0
+	for chain in AllChains[file]:
+		if functions.get_molecule_type(chain) == "Protein":	
+			AllChains[file][i] = functions.get_backbone_atoms_protein(chain)
+		else:
+			AllChains[file][i] =  functions.get_backbone_atoms_nucleicacids(chain)
+		i += 1
+
+
+
+
+#print (AllChains)
 
 
 
