@@ -5,6 +5,8 @@ import os
 import FileExplorer
 import FunctionHodgepodge as FH
 import functions
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
 
 """ First we grab all of the user input as specified below"""
 
@@ -122,12 +124,14 @@ for file in files:
 ### Now we are going to get chain information for each of the files in the directory 
 AllChains = {} # We are going to save all of the chains here
 for file in Allinteractions:
+	AllChains[file] = {}
 	filepath = options.input + "/" + file
 	Zip = "FALSE"
 	if ".gz" in file:
 		Zip = "TRUE"
 	pdb = FileExplorer.pdb(filepath, file, Zip )
-	AllChains[file] = pdb.get_chain()
+	for chain in pdb.get_chain():
+		AllChains[file][chain] = {}
 """ So after that last step we now have a list of chain objects from which we can retrieve information 
 This list is stored as a value inside a dictionary that has the filename from which they came from as the key"""
 
@@ -135,18 +139,61 @@ This list is stored as a value inside a dictionary that has the filename from wh
 """ Now I will try to align the chains across file pairs to try and find matches
 In order to do this I will first have to get the sequences of each chain object so that I can align them."""
 
-""" Here i am going to get the sequences for each chain and save them in the dictionary that I created"""
+""" Here i am going to get the Ca atoms for eventual superposition for each chain and save them in the dictionary that I created"""
 for file in AllChains:
 	i=0
 	for chain in AllChains[file]:
 		if functions.get_molecule_type(chain) == "Protein":	
-			AllChains[file][i] = functions.get_backbone_atoms_protein(chain)
+			AllChains[file][chain] = functions.get_backbone_atoms_protein(chain)
 		else:
-			AllChains[file][i] =  functions.get_backbone_atoms_nucleicacids(chain)
+			AllChains[file][chain] =  functions.get_backbone_atoms_nucleicacids(chain)
 		i += 1
 
 
+""" in order to avoid calculating the sequences multiple times
+I am just going place the sequences and their identifiers in a list of tuples
+or maybe a dictionary"""
 
+forAlignmentlist = []
+for file in AllChains:
+	i = 0
+	for chain in AllChains[file]:
+		addtuple = (file + "_" + chain.id, functions.get_sequence(chain) )
+		forAlignmentlist.append(addtuple)
+		i += 1
+
+
+print(forAlignmentlist[0])
+""" Here I am going to perform the alignments. It is working at the moment but isnt done yet I still 
+Have to take the scores into account correcting for the length etc. and I will also save the alignments somewhere"""
+Filesdone = {}
+for chain in forAlignmentlist:
+	Filesdone[chain[0]] = ""
+	for secondchain in forAlignmentlist: 
+		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
+			print(pairwise2.align.globalxx(chain[1],secondchain[1]))
+			print("I aligned " , chain[0], " and " ,secondchain[0])
+
+"""
+
+
+Now i am going to go an align all of the chains
+listofFilesdone = []
+for file in AllChains:
+	listofFilesdone.append(file)
+	for chain in AllChains[file]:
+		firstAlign = functions.get_sequence(chain)
+		for filetwo in AllChains:
+			if filetwo not in listofFilesdone:
+				for chaintwo in AllChains:
+					second
+					print(pairwise2.align.globalxx(AllChains[file][i],AllChains[filetwo][k]))
+					exit(0)
+
+		AllChains[file][i]
+
+
+"""
 
 #print (AllChains)
 
