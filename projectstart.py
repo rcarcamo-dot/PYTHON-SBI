@@ -163,16 +163,24 @@ for file in AllChains:
 		i += 1
 
 
-print(forAlignmentlist[0])
-""" Here I am going to perform the alignments. It is working at the moment but isnt done yet I still 
-Have to take the scores into account correcting for the length etc. and I will also save the alignments somewhere"""
+""" Here I am going to perform the alignments. i am saving the results of the 
+alignment to a file named Resuts_of_Alignments.txt that will be located in the user
+provided outputs directory. In order to identify the iddentical chains I take the alignment
+score and devide it by the maximum sequence length of the two aligned sequences.
+It is probably a better idea to filter out the identical sequences now rather than going throug
+this file later to get the matches. I would use a user provided threshold to calculate this."""
+
+writeresult = open(options.output + "/Results_of_Alignments.txt", "w")
 Filesdone = {}
+writeresult.write("id1\tid2\tscore\n")
 for chain in forAlignmentlist:
 	Filesdone[chain[0]] = ""
 	for secondchain in forAlignmentlist: 
 		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
-			print(pairwise2.align.globalxx(chain[1],secondchain[1]))
-			print("I aligned " , chain[0], " and " ,secondchain[0])
+			correctinglength = max(len(chain[1]),len(secondchain[1]))
+			Align_result = pairwise2.align.globalxx(chain[1],secondchain[1])
+			writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
+			print(Align_result[0][2])
 
 """
 
