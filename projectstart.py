@@ -44,6 +44,13 @@ parser.add_argument("-v","--verbose",
 	default = False,
 	help = "Print log in stderr")
 
+parser.add_argument("-t", "--threshold",
+	type = float, 
+	dest = "threshold",
+	action = "store",
+	default = float(0.9),
+	help = "Alignment score threshold for sequences to be considered indentical")
+
 
 """ now we save all of the arguments to options. We call them with optons"""
 options = parser.parse_args()
@@ -169,7 +176,6 @@ provided outputs directory. In order to identify the iddentical chains I take th
 score and devide it by the maximum sequence length of the two aligned sequences.
 It is probably a better idea to filter out the identical sequences now rather than going throug
 this file later to get the matches. I would use a user provided threshold to calculate this."""
-
 writeresult = open(options.output + "/Results_of_Alignments.txt", "w")
 Filesdone = {}
 writeresult.write("id1\tid2\tscore\n")
@@ -179,36 +185,23 @@ for chain in forAlignmentlist:
 		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
 			correctinglength = max(len(chain[1]),len(secondchain[1]))
 			Align_result = pairwise2.align.globalxx(chain[1],secondchain[1])
-			writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
-			print(Align_result[0][2])
-
-"""
-
-
-Now i am going to go an align all of the chains
-listofFilesdone = []
-for file in AllChains:
-	listofFilesdone.append(file)
-	for chain in AllChains[file]:
-		firstAlign = functions.get_sequence(chain)
-		for filetwo in AllChains:
-			if filetwo not in listofFilesdone:
-				for chaintwo in AllChains:
-					second
-					print(pairwise2.align.globalxx(AllChains[file][i],AllChains[filetwo][k]))
-					exit(0)
-
-		AllChains[file][i]
-
-
-"""
-
-#print (AllChains)
+			if options.threshold <=  Align_result[0][2]/correctinglength:
+				writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
+				#print(Align_result[0][2])
 
 
 
-	#print(chainsgiven.difference(chainsfound))
-	#print(len(chainlist))
+""" So the matching Chains have been identified, and are stored in a file within the outputs directory.
+The file where the information can be found is called "Results_of_Alignments.txt". The format of the file
+is tab seperated. In the first two columns are the identifiers of the two chain pairs. The way how the chains are
+identified are by "their filename" + "_" + "the chain name". The information can be extracted for superpositioning."""
+
+
+
+
+
+
+
 
 
 
