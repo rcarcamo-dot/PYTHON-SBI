@@ -45,12 +45,12 @@ A module is a file containing Python definitions and statements. It is important
 
 It is necessary to consider that the output files will depend on the command-line options and arguments the user determines while performing the analysis. All of them will be stored in the output directory selected by the user (-o or --output).
 
-The following <b>arguments</b> are stablished:
+The following <b>arguments</b> are established:
 
 * <b> -i INDIR, --input INDIR </b>
   
   It must be a directory provided by the user which contains the inputs pairs (compressed format is also
-  available <i>.tar.gz</i>). In case you want to rebuild a macrocomplex from PDB, you can introduce its pdb file (.pdb).
+  available <i>.tar.gz</i>).
 
    <i>(default: True)</i>
  
@@ -94,9 +94,7 @@ If the <b>default options</b> are set, these are the following outputs:
 
 <b>files</b>: 
 
- - Result_of_Alignments.txt: file genereated from the pairwiise comparisons between all the inputs will be located in the user
-provided outputs directory
-
+ - Result_of_Alignments.txt: file genereated from the pairwiise comparisons between all the inputs.
 
 
 
