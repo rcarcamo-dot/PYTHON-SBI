@@ -5,6 +5,7 @@ import os
 import FileExplorer
 import FunctionHodgepodge as FH
 import functions
+import superimposer
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 
@@ -78,7 +79,7 @@ if options.verbose:
 	print("Checking format of input files and gathering file and chain names...\n\n")
 
 Allinteractions = [] # This variable stores the name of the files within the input directory
-AllChains = [] # This variable contains tuples of all of the chains and files that they are located in
+File_chain_pair = [] # This variable contains tuples of all of the chains and files that they are located in
 ####
 ###  The files storage variable above may have to be changed to account for other types of files contained besides just pfb (interactions)
 ####
@@ -131,14 +132,15 @@ for file in files:
 
 
 	Allinteractions.append(file)
-	for chain in chainlist:
-		onetuple = (file,chain)
-		AllChains.append(onetuple)
+
 
 # AllChains is now a list of tuples containing the chains in the second position and the file wherin that chai can be found in the first
 
 if options.verbose:
 	print("checking input and output locations...\n\n")
+
+newchain_id = 1
+newchain_id_old_id = {}
 
 ### Now we are going to get chain information for each of the files in the directory 
 AllChains = {} # We are going to save all of the chains here
@@ -149,11 +151,48 @@ for file in Allinteractions:
 	if ".gz" in file:
 		Zip = "TRUE"
 	pdb = FileExplorer.pdb(filepath, file, Zip )
+	contained_chain_names = []
+	for element in file.split(".pdb")[0].split("_"):
+		if file.split(".pdb")[0].split("_").index(element) != 0:
+			contained_chain_names.append(element)
+	
+
+	print(contained_chain_names)
+
+	""" What is happening here is the creation of dictionary that will allow us to access a chain 
+	object with the filename and the name of the chain. For this I am setting up a new unique id for
+	each chain that will allow me to use it as key in a dictionary and then having a translation dictionary
+	that can let me know which original chain that belonged to"""
+
 	for chain in pdb.get_chain():
-		AllChains[file][chain] = {}
+		onetuple = (file,chain)
+		File_chain_pair.append(onetuple)
+		print(type(chain.__repr__().split("=")[1].replace(">","")))
+		old_id = chain.id
+		AllChains[file][old_id] = {}
+		chain.id = newchain_id
+		newchain_id_old_id[newchain_id] = (file, old_id)
+		newchain_id += 1
+		AllChains[file][old_id][chain.id] = ""
+		#exit(0) 
+
+""" this following loop prints the translation dictionary """
+
+#for newchain_id in newchain_id_old_id:
+#	print (newchain_id, "->    ", newchain_id_old_id[newchain_id])
+
+""" Here I can see exacty what the ids are"""
+#for file in AllChains:
+#	for old_id in AllChains[file]:	
+#		print(AllChains[file][old_id])
+#		for new_id in AllChains[file][old_id]:
+#			print(newchain_id_old_id[new_id])
+
+#exit(0)
+
+
 """ So after that last step we now have a list of chain objects from which we can retrieve information 
 This list is stored as a value inside a dictionary that has the filename from which they came from as the key"""
-
 
 """ Now I will try to align the chains across file pairs to try and find matches
 In order to do this I will first have to get the sequences of each chain object so that I can align them."""
@@ -161,15 +200,27 @@ In order to do this I will first have to get the sequences of each chain object 
 if options.verbose:
 	print("getting Ca atoms for superpositioning...\n\n")
 
+# new_id_to_chain_dict = {}  <<< incase i need this (superimposer does it)
+
 """ Here i am going to get the Ca atoms for eventual superposition for each chain and save them in the dictionary that I created"""
 for file in AllChains:
 	i=0
 	for chain in AllChains[file]:
-		if functions.get_molecule_type(chain) == "Protein":	
-			AllChains[file][chain] = functions.get_backbone_atoms_protein(chain)
-		else:
-			AllChains[file][chain] =  functions.get_backbone_atoms_nucleicacids(chain)
-		i += 1
+		for chain_object_id in AllChains[file][chain]:
+			for filecheck, chaincheck in File_chain_pair:
+				if filecheck == file and chaincheck.id == chain_object_id:
+					#new_id_to_chain_dict[chaincheck.id] = chaincheck <<< incase i need this (superimposer does it)
+					if functions.get_molecule_type(chaincheck) == "Protein":
+						# file is the first key (file of origin for the chain)
+						# chain is second key (original chain id)
+						# chain_object_id is third key (new chain id)
+						# I am now adding the list of backbone atoms as final value
+						AllChains[file][chain][chain_object_id] = chaincheck
+						#AllChains[file][chain][chain_object_id] = functions.get_backbone_atoms_protein(chaincheck)  <<< incase i need this (superimposer does it)
+					else:
+						AllChains[file][chain][chain_object_id] =  chaincheck
+						#AllChains[file][chain][chain_object_id] =  functions.get_backbone_atoms_nucleicacids(chaincheck) <<< incase i need this (superimposer does it)
+					i += 1	
 
 
 """ in order to avoid calculating the sequences multiple times
@@ -183,9 +234,10 @@ forAlignmentlist = []
 for file in AllChains:
 	i = 0
 	for chain in AllChains[file]:
-		addtuple = (file + "_" + chain.id, functions.get_sequence(chain) )
-		forAlignmentlist.append(addtuple)
-		i += 1
+		for new_id in AllChains[file][chain]:
+			addtuple = (file + "_" + chain, functions.get_sequence(AllChains[file][chain][new_id]) )
+			forAlignmentlist.append(addtuple)
+			i += 1
 
 if options.verbose:
 	print("Aligning chains to search for matches...\n\n")
@@ -205,18 +257,16 @@ for chain in forAlignmentlist:
 		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
 			correctinglength = max(len(chain[1]),len(secondchain[1]))
 			Align_result = pairwise2.align.globalxx(chain[1],secondchain[1])
+			writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
 			if options.threshold <=  Align_result[0][2]/correctinglength:
-				writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
 				if chain[0] in chainpair_dict:
 					chainpair_dict[chain[0]].append(secondchain[0])
 				else:
-
 					chainpair_dict[chain[0]] = [secondchain[0]]
 				#print(Align_result[0][2])
 
 if options.verbose:
 	print("###\n### Alignments are saved in outputs folder as \"Results_of_Alignments.txt\"\n###\n\n")
-
 """ So the matching Chains have been identified, and are stored in a file within the outputs directory.
 The file where the information can be found is called "Results_of_Alignments.txt". The format of the file
 is tab seperated. In the first two columns are the identifiers of the two chain pairs. The way how the chains are
@@ -247,7 +297,6 @@ for key in chainpair_dict:
 if options.verbose:
 	print("###\n### The best starting reference chain is", initialref, " with ",  mostmatch ,"matches\n###\n\n")
 
-
 ##
 ## that is function
 ##
@@ -267,9 +316,27 @@ for match in chainpair_dict[initialref]:
 
 	print (initialref, " \t", match)
 	print (reference_file, " ", reference_chain,"\t", match_file, " ", match_chain,"\n\n")
+	exit(0)
+	test_impose = superimposer.Superimposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0])
+
+	exit(0)
+	#print(AllChains[match_file][growth_chain])
+
+for file in AllChains:
+	print(file)
+	for chain in AllChains[file]:
+		print(chain, " <<< ")
+	
 ##
 ## that is function
 ##
+
+
+# model > 1gzx_A_B.pdb + 1gzx_D_B.pdb_B + 
+
+
+# 1gzx_A_B.pdb_A -> 1gzx_D_B.pdb_D
+
 
 
 
