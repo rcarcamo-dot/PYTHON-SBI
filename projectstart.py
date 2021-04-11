@@ -157,8 +157,6 @@ for file in Allinteractions:
 			contained_chain_names.append(element)
 	
 
-	print(contained_chain_names)
-
 	""" What is happening here is the creation of dictionary that will allow us to access a chain 
 	object with the filename and the name of the chain. For this I am setting up a new unique id for
 	each chain that will allow me to use it as key in a dictionary and then having a translation dictionary
@@ -167,7 +165,6 @@ for file in Allinteractions:
 	for chain in pdb.get_chain():
 		onetuple = (file,chain)
 		File_chain_pair.append(onetuple)
-		print(type(chain.__repr__().split("=")[1].replace(">","")))
 		old_id = chain.id
 		AllChains[file][old_id] = {}
 		chain.id = newchain_id
@@ -312,13 +309,10 @@ for match in chainpair_dict[initialref]:
 	for element in match.split(".pdb_")[0].split("_"):
 		if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
 			growth_chain = element
-			print(growth_chain)
 
-	print (initialref, " \t", match)
-	print (reference_file, " ", reference_chain,"\t", match_file, " ", match_chain,"\n\n")
-	exit(0)
-	test_impose = superimposer.Superimposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0])
-
+	#exit(0)
+	test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
+	print(test_impose.imposer(), " <<< transformed growth_chain")
 	exit(0)
 	#print(AllChains[match_file][growth_chain])
 
