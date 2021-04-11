@@ -1,5 +1,8 @@
 from Bio.PDB import Superimposer
 import functions
+from Bio.PDB import NeighborSearch
+
+
 class Superposer (object):
     """
     """
@@ -13,30 +16,42 @@ class Superposer (object):
         
         if functions.get_molecule_type(self.object1) == "Protein":
             atoms1 = list(functions.get_backbone_atoms_protein(self.object1))
+            chain1 = (object1, atoms1) #save chains in a list, check if it's better to store them in a hash
         else:
             atoms1 = list (functions.get_backbone_atoms_nucleicacids(self.object1))
+            chain1 = (object1, atoms1)
 
         if functions.get_molecule_type(self.object2) == "Protein":
             atoms2 = list(functions.get_backbone_atoms_protein(self.object2))
+            chain2 = (object1, atoms2)
         else:
             atoms2 = list (functions.get_backbone_atoms_nucleicacids(self.object2))
+            chain2 = (object2, atoms2)
 
         if functions.get_molecule_type(self.growth_chain) == "Protein":
             atoms3 = list(functions.get_backbone_atoms_protein(self.growth_chain))
+            chain3 = (object3, atoms3)
         else:
             atoms3 = list (functions.get_backbone_atoms_nucleicacids(self.growth_chain))
+            chain3 = (object3, atoms3)
 
 
-        if len(atoms1) > len(atoms2):
-            atoms1 = atoms1[:len(atoms2)]
-        else:
-            atoms2 = atoms2[:len(atoms1)]
+
+        if len(object1[1]) > len(object2[1]):
+            object1[1] = object1[1][:len(obeject2[1])]
+        elif len(object2[1]) > len(object1[1]):
+            object2[1] = object2[1][:len(obeject1[1])]
         
-        Superimposer.set_atoms(self, atoms1, atoms2)
+        superimposition = Superimposer() 
+			superimposition.set_atoms(object1[1], object2[1])
+			RMSD = superimposition.rms 
+			if RMSD > RMSD_threshold: 
+				continue
+            else:
+                pass
+			superimpositions[(object1.get_id(),object2.get_id())] = superimposition #check if we already have a get_id function
+	        if superimposed_chains is True: 
+	            superimpositions = sorted(superimpositions.items(), key = lambda x: x[1].rms) 
+	    return (superimpositions, best_RMSD, superimposed_chains)
 
-        Superimposer.apply(self, self.growth_chain.get_atoms())
-
-        return self.growth_chain
-
-    def get_growth_chain(self):
-        return self.growth_chain
+    def macrocomplex_builder ()
