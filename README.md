@@ -43,19 +43,18 @@ A module is a file containing Python definitions and statements. It is important
 
 ### Output Files
 
-It is necessary to consider that the output files will depend on the command-line options and arguments the user determines while performing the analysis. All of them will be stored in the output directory selected by the user (-o or --output).
+It is necessary to consider that the output files will depend on the command-line options and arguments the user determines while performing the analysis. All of them will be stored in the output directory selected by the user (-o or --output-directory).
 
 The following <b>arguments</b> are established:
 
-* <b> -i INDIR, --input INDIR </b>
+* <b> -i, --input-directory  </b>
   
-  It must be a directory provided by the user which contains the inputs pairs (compressed format is also
-  available <i>.tar.gz</i>).
+  It must be a directory provided by the user which contains the inputs pairs (compressed format is also available <i>.tar.gz</i>).
 
-   <i>(default: True)</i>
+   <i>(default: None)</i>
  
 
-* <b> -o OUTDIR, --output OUTDIR</b>
+* <b> -o, --output-directory</b>
  
   This is a directory which will be created during the program, structured in other subdirectories. 
   
