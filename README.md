@@ -8,6 +8,7 @@
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 - [PYTHON-SBI](#python-sbi)
   - [Table of Contents](#Table-of-Contents)
+    A python package to construct macrocomplex given protein or nucleic acid pairwise interactions.
   - [Description](#Description)
 - [Prerequisites](#Prerequisites)
 - [Installation](#Installation)
