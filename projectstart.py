@@ -6,6 +6,7 @@ import FileExplorer
 import FunctionHodgepodge as FH
 import functions
 import superimposer
+import Bio.PDB
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 
@@ -282,6 +283,7 @@ if options.verbose:
 ## Turn this into a function
 ##
 
+
 """ I am simply checking which of the chains has the most matches associated with it 
 It is not necessary, but we need to start somewhere and I figure this is a good place to do so """
 initialref = ""
@@ -294,6 +296,13 @@ for key in chainpair_dict:
 if options.verbose:
 	print("###\n### The best starting reference chain is", initialref, " with ",  mostmatch ,"matches\n###\n\n")
 
+
+model_indicator = 1
+working_model = Bio.PDB.Model.Model(model_indicator)
+reference_file = initialref.split(".pdb_")[0] + ".pdb"
+working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[1]].values())[0])
+working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0])
+
 ##
 ## that is function
 ##
@@ -301,6 +310,8 @@ if options.verbose:
 ##
 ## this could also be a function
 ##
+
+
 for match in chainpair_dict[initialref]:
 	reference_file = initialref.split(".pdb_")[0] + ".pdb"
 	reference_chain = initialref.split(".pdb_")[1]
@@ -312,7 +323,9 @@ for match in chainpair_dict[initialref]:
 
 	#exit(0)
 	test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
-	print(test_impose.imposer(), " <<< transformed growth_chain")
+	working_model.add(test_impose.imposer())
+	for x in working_model.get_chains():
+		print (x)
 	exit(0)
 	#print(AllChains[match_file][growth_chain])
 

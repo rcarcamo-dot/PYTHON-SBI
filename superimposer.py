@@ -40,4 +40,3 @@ class Superposer (object):
 
     def get_growth_chain(self):
         return self.growth_chain
-    #print(super_imposer.rms)
