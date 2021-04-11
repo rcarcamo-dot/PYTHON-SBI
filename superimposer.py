@@ -1,31 +1,34 @@
-sp1 = []
-sp2 = []
+from Bio.PDB import Superimposer
 
-for model in object1:
-    for chain in model:
-        if chain.get_id() == sp_chain:
-            for residue in chain:
-                for atom in residue:
-                    sp1.append(atom)
+class Superimposer (object):
+    """
+    """
+    def __init__ (self, object1, object2):
+        self.object1 = object1
+        self.object2 = object2
+        self.super_imposer = PDB.Superimposer()
+    
 
-for model in object2:
-    for chain in model:
-        if chain.get_id() == sp_chain:
-            for residue in chain:
-                for atom in residue:
-                    sp2.append(atom)
+    def imposer (self):
+        
+        if molecule_type == "Protein":
+            atoms1 = list(self.object1.get_backbone_atoms_protein)
+        else:
+            atoms2 = list (self.object2.get_backbone_atoms_nucleicacids )
 
+        if len(atoms1) > len(atoms1):
+            atoms1 = atoms1[:len(atoms2)]
+        else:
+            atoms2 = atoms2[:len(atoms1)]
+        
+        self.Superimposer.set_atoms(atoms1, atoms2)
 
-super_imposer = PDB.Superimposer()
-super_imposer.set_atoms(sp1, sp2)
-super_imposer.apply(object2.get_atoms())
+        return self.Superimposer
 
+    def calculate_RMSD (self)
 
-print(super_imposer.rms)
+        imposer = self.imposer
+        rmsd = imposer.rms
+        return rmsd
 
-
-io = PDB.PDBIO()
-io.set_structure(object2)
-io.save("s2.pdb")
-io.set_structure(object1)
-io.save("s1.pdb")
+    print(super_imposer.rms)
