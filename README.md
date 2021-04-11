@@ -3,7 +3,7 @@
 
 *Patrick Gohl, Oumout Egkemen Moustafa, Roberto Carcamo Calvo*
 
-## **TABLE OF CONTENTS**
+## **Table of Contents**
 
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 - [PYTHON-SBI](#python-sbi)
@@ -47,7 +47,7 @@ Most of the proteins comprise of a variety of polypeptide chains that make up mu
 ## Tutorial
 ### Input Files
 
-The input files must be <b>pairs of interacting chains</b> (.pdb), which has to be located into a directory decided by the user. This directory can also be in <i>tar.gz</i> format.
+The input files must be pairs of interacting chains (.pdb), which has to be located into a directory decided by the user. This directory can also be in <i>tar.gz</i> format.
 
 ### Python Modules
 
