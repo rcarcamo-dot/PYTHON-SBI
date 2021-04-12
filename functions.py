@@ -3,7 +3,10 @@ import os
 import re
 from Bio.SeqUtils import IUPACData as threetoone 
 from Bio.PDB import PDBParser
-
+from Bio.PDB import Chain
+import Bio
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
 
 class IncorrectInput(NameError):
 	def __init__(self,input):
@@ -78,3 +81,73 @@ def get_molecule_type (chain):
 	else:
 		molecule_type = "Protein"
 	return molecule_type
+
+
+def ensure_no_clashing(model, growth_chain):
+	""" ensures that the new chain isnt interfering (clashing) with any of the existing 
+	chains that in out model. Returns True if it isnt and false if it does"""
+	clashing = set()
+	model_atom_list = Bio.PDB.Selection.unfold_entities(model, "A")
+	Neighbors = Bio.PDB.NeighborSearch(model_atom_list)
+
+	for atoms in growth_chain.get_atoms():
+		location = atoms.get_coord()
+		matches = Neighbors.search(location, 1.2, level = "C")
+		for result in matches:
+			if result != growth_chain:
+				clashing.add(result)
+	if len(clashing) == 0:
+		return True
+	else:
+		return False
+
+def prep_superimpose(fixed_chain, moving_chain):
+	fixed_chain = fixed_chain
+	moving_chain = moving_chain
+	fixed_chain_sequence = get_sequence(fixed_chain) 
+	moving_chain_sequence = get_sequence(moving_chain)
+
+	alignments = pairwise2.align.globalxx(fixed_chain_sequence, moving_chain_sequence)
+
+	fixed_chain_sequence = alignments[0][0]
+	moving_chain_sequence = alignments[0][1]
+
+	fixedchain_pattern = []
+	movingchain_pattern = []
+
+	for res1, res2 in zip(fixed_chain_sequence, moving_chain_sequence):
+		if res1 == res2:
+			fixedchain_pattern.append(1)
+			movingchain_pattern.append(1)
+		elif res1 == '-':
+			movingchain_pattern.append(0)
+		elif res2 == '-':
+			fixedchain_pattern.append(0)
+	chains_pattern = (fixedchain_pattern, movingchain_pattern)
+	return chains_pattern
+
+def get_worked_chains(fixed_chain, moving_chain):
+	new_fixed_chain = Bio.PDB.Chain.Chain('X')
+	new_moving_chain = Bio.PDB.Chain.Chain('Y')
+	fixed_chain = fixed_chain
+	moving_chain = moving_chain
+	for residue, pattern in zip(fixed_chain.get_residues(), prep_superimpose(fixed_chain, moving_chain)[0]):
+		if pattern == 1:
+			new_fixed_chain.add(residue.copy())
+	for residue, pattern in zip(moving_chain.get_residues(), prep_superimpose(fixed_chain, moving_chain)[1]):
+		if pattern == 1:
+			new_moving_chain.add(residue.copy())
+	return (new_fixed_chain,new_moving_chain)
+
+def get_the_atoms(chain):
+	if get_molecule_type(chain) == "Protein":
+		atoms = list(get_backbone_atoms_protein(chain))
+	else:
+		atoms = list (get_backbone_atoms_nucleicacids(chain))
+	return atoms
+
+
+
+
+
+
