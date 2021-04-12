@@ -7,8 +7,11 @@ import FunctionHodgepodge as FH
 import functions
 import superimposer
 import Bio.PDB
+import random
+import copy
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
+from Bio.PDB import Superimposer
 
 """ First we grab all of the user input as specified below"""
 
@@ -296,12 +299,207 @@ for key in chainpair_dict:
 if options.verbose:
 	print("###\n### The best starting reference chain is", initialref, " with ",  mostmatch ,"matches\n###\n\n")
 
-
+model_chain_id_contained = {}
 model_indicator = 1
 working_model = Bio.PDB.Model.Model(model_indicator)
 reference_file = initialref.split(".pdb_")[0] + ".pdb"
 working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[1]].values())[0])
+model_chain_id_contained[list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[1]].values())[0].id] = 1
 working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0])
+model_chain_id_contained[list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0].id] = 1
+
+#exit(0)
+
+chain_match_list = []
+for x in chainpair_dict:
+	static_file = x.split(".pdb_")[0] + ".pdb"
+	static_chain = list(AllChains[static_file][x.split(".pdb_")[1]].values())[0]
+	for string in chainpair_dict[x]:
+		chain_name = string.split(".pdb_")[1]
+		file = string.split(".pdb_")[0] + ".pdb"
+		for char in string.split(".pdb_")[0].split("_"):
+			if string.split(".pdb_")[0].split("_").index(char) != 0 and char != chain_name:
+				alt_chain = list(AllChains[file][char].values())[0]
+		chain = list(AllChains[file][chain_name].values())[0]
+		chain_match_list.append((static_chain,chain,alt_chain))
+
+
+
+for fixed_chain in working_model.get_chains():
+	for match_tuple in chain_match_list:
+		if match_tuple[0] == fixed_chain:
+			moving_chain = match_tuple[1]
+			growth_chain  = copy.copy(match_tuple[2])
+
+			new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
+			for residue in growth_chain:
+				new_growth_chain.add(residue.copy())
+			working_model.add(new_growth_chain)
+
+			fixed_atoms = functions.get_the_atoms(fixed_chain)
+			moving_atoms = functions.get_the_atoms(moving_chain)
+			growth_atoms = functions.get_the_atoms(growth_chain)
+
+			if len(fixed_atoms) != len(moving_atoms):
+				worked_chains = functions.get_worked_chains(fixed_chain, moving_chain)
+				worked_fixed_chain = worked_chains[0]
+				worked_moving_chain = worked_chains[1]
+
+				fixed_atoms = functions.get_the_atoms(worked_fixed_chain)
+				moving_atoms  = functions.get_the_atoms(worked_moving_chain)
+
+			superpositioning = Bio.PDB.Superimposer()
+			superpositioning.set_atoms(fixed_atoms,moving_atoms)
+			superpositioning.apply(new_growth_chain.get_atoms())
+
+			if not functions.ensure_no_clashing(working_model, new_growth_chain):
+				working_model.detach_child(new_growth_chain.id)
+
+
+
+### THIS IS THE ISSSUE the ids have to be letters!!!!!!!!!
+
+
+manualOveride = ["A","B","C","D"]
+i=0
+for x in working_model:
+	x.id = manualOveride[i]
+	i += 1
+	print(x.id)
+
+
+model_filename = options.output + "/testing_gzx.pdb"
+io = Bio.PDB.PDBIO()
+io.set_structure(working_model)
+io.save(model_filename)
+
+
+
+
+
+exit(0)
+
+
+
+
+
+########
+########
+########
+########
+########  THe rest is unused code at the moment (lots of problem solving)
+########
+########
+########
+########
+########
+
+
+
+
+
+
+
+
+for match in chainpair_dict[initialref]:
+	reference_file = initialref.split(".pdb_")[0] + ".pdb"
+	reference_chain = initialref.split(".pdb_")[1]
+	match_file = match.split(".pdb_")[0] + ".pdb"
+	match_chain = match.split(".pdb_")[1]	
+	for element in match.split(".pdb_")[0].split("_"):
+		if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
+			added_id = list(AllChains[match_file][element].values())[0].id
+			list(AllChains[match_file][element].values())[0].id = random.randint(0,1000000)
+			growth_chain = copy.copy(list(AllChains[match_file][element].values())[0])
+	if list(AllChains[reference_file][reference_chain].values())[0].id in model_chain_id_contained:
+		for chain in working_model:
+			if chain.id == list(AllChains[reference_file][reference_chain].values())[0].id:
+				fixed_chain = chain
+		moving_chain = list(AllChains[match_file][match_chain].values())[0]
+
+		superimposition = Superimposer()
+		worked_atoms_list = functions.get_worked_chains(fixed_chain,moving_chain)
+		new_fixed_atoms = functions.get_the_atoms(worked_atoms_list[0])
+		new_moving_atoms = functions.get_the_atoms(worked_atoms_list[1])
+		if len(new_fixed_atoms) > len(new_moving_atoms):
+			new_fixed_atoms = new_fixed_atoms[:len(new_moving_atoms)]
+		else:
+			new_moving_atoms = new_moving_atoms[:len(new_fixed_atoms)]
+		superimposition.set_atoms(new_fixed_atoms, new_moving_atoms)
+		working_model.add(growth_chain)
+		superimposition.apply(growth_chain)
+		flag = 0
+		if not functions.ensure_no_clashing(working_model, growth_chain):
+			working_model.detach_child(growth_chain.id)
+			print("clash")
+			flag = 1
+		if flag == 0:
+			model_chain_id_contained[added_id] = 1
+
+
+del chainpair_dict[initialref]
+
+for ref in chainpair_dict:
+	#Already_added_files = {}
+	for match in chainpair_dict[ref]:
+		reference_file = initialref.split(".pdb_")[0] + ".pdb"
+		reference_chain = initialref.split(".pdb_")[1]
+		match_file = match.split(".pdb_")[0] + ".pdb"
+		match_chain = match.split(".pdb_")[1]
+		for element in match.split(".pdb_")[0].split("_"):
+			if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
+				list(AllChains[match_file][element].values())[0].id = random.randint(0,1000000)
+				growth_chain = copy.copy(list(AllChains[match_file][element].values())[0])
+
+		if list(AllChains[reference_file][reference_chain].values())[0].id in model_chain_id_contained:
+			for chain in working_model:
+				if chain.id == list(AllChains[reference_file][reference_chain].values())[0].id:
+					fixed_chain = chain
+			moving_chain = list(AllChains[match_file][match_chain].values())[0]
+
+			superimposition = Superimposer()
+			worked_atoms_list = functions.get_worked_chains(fixed_chain,moving_chain)
+			new_fixed_atoms = functions.get_the_atoms(worked_atoms_list[0])
+			new_moving_atoms = functions.get_the_atoms(worked_atoms_list[1])
+			if len(new_fixed_atoms) > len(new_moving_atoms):
+				new_fixed_atoms = new_fixed_atoms[:len(new_moving_atoms)]
+			else:
+				new_moving_atoms = new_moving_atoms[:len(new_fixed_atoms)]
+			superimposition.set_atoms(new_fixed_atoms, new_moving_atoms)
+			working_model.add(growth_chain)
+			superimposition.apply(growth_chain)
+			flag = 0
+			if not functions.ensure_no_clashing(working_model, growth_chain):
+				working_model.detach_child(growth_chain.id)
+				print("clash")
+				flag = 1
+			if flag == 0:
+				model_chain_id_contained[added_id] = 1
+
+
+
+
+		#exit(0)
+			
+io = Bio.PDB.PDBIO()
+model_filename = options.output + "/tested_1gzx"
+for x in working_model.get_chains():
+	print(x)
+	"""
+	io.set_structure(working_model)
+	new_model_filename = model_filename + "_" + str(x.id) + ".pdb"
+	io.save(new_model_filename) 
+	"""
+
+model_filename = options.output + "/tested_1gzx.pdb"
+io = Bio.PDB.PDBIO()
+io.set_structure(working_model)
+io.save(model_filename)
+
+
+exit(0)
+
+
 
 ##
 ## that is function
@@ -310,7 +508,7 @@ working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].sp
 ##
 ## this could also be a function
 ##
-
+Already_added_id = {}
 
 for match in chainpair_dict[initialref]:
 	reference_file = initialref.split(".pdb_")[0] + ".pdb"
@@ -322,12 +520,66 @@ for match in chainpair_dict[initialref]:
 			growth_chain = element
 
 	#exit(0)
-	test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
-	working_model.add(test_impose.imposer())
-	for x in working_model.get_chains():
-		print (x)
-	exit(0)
+	if list(AllChains[match_file][growth_chain].values())[0].id not in Already_added_id:
+
+		test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
+		chain_addition = test_impose.imposer()
+		if functions.ensure_no_clashing(working_model, chain_addition):
+			working_model.add(chain_addition)
+			Already_added_id[list(AllChains[match_file][growth_chain].values())[0].id] = 1
+		else:
+			print("get this sucka outa here!  ", match_file, " ", match_chain )
+	else:
+		while list(AllChains[match_file][growth_chain].values())[0] in Already_added_id:
+			list(AllChains[match_file][growth_chain].values())[0].id = random.randint(0,1000000)
+		test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
+		chain_addition = test_impose.imposer()
+		if functions.ensure_no_clashing(working_model, chain_addition):
+			working_model.add(chain_addition)
+			Already_added_id[list(AllChains[match_file][growth_chain].values())[0].id] = 1
+		else:
+			print("get this sucka outa here!  ", match_file, " ", match_chain )
 	#print(AllChains[match_file][growth_chain])
+
+"""
+
+del chainpair_dict[initialref]
+
+for ref in chainpair_dict:
+	#Already_added_files = {}
+	for match in chainpair_dict[ref]:
+		Already_added_files = {}
+		reference_file = initialref.split(".pdb_")[0] + ".pdb"
+		reference_chain = initialref.split(".pdb_")[1]
+		match_file = match.split(".pdb_")[0] + ".pdb"
+		match_chain = match.split(".pdb_")[1]
+		for element in match.split(".pdb_")[0].split("_"):
+			if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
+				growth_chain = element
+
+		#exit(0)
+
+		if match_file not in Already_added_files:
+			test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
+			chain_addition = test_impose.imposer()
+			if functions.ensure_no_clashing(working_model, chain_addition):
+				working_model.add(chain_addition)
+				Already_added_files[match_file] = 1
+			else:
+				print("get this sucka outa here!  ", match_file, " ", match_chain )
+		#print(AllChains[match_file][growth_chain])
+
+
+"""
+model_filename = options.output + "/tested_1gzx.pdb"
+io = Bio.PDB.PDBIO()
+io.set_structure(working_model)
+io.save(model_filename)
+
+#exit(0)
+for x in working_model.get_chains():
+	print (x)
+exit(0)
 
 for file in AllChains:
 	print(file)
