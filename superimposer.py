@@ -1,34 +1,79 @@
 from Bio.PDB import Superimposer
+import functions
+from Bio.PDB import NeighborSearch
+import numpy
 
-class Superimposer (object):
+
+class Superposer (object):
     """
     """
-    def __init__ (self, object1, object2):
+    def __init__ (self, object1, object2, growth_chain):
         self.object1 = object1
         self.object2 = object2
-        self.super_imposer = PDB.Superimposer()
-    
+        self.growth_chain = growth_chain
 
     def imposer (self):
+
         
-        if molecule_type == "Protein":
-            atoms1 = list(self.object1.get_backbone_atoms_protein)
+        if functions.get_molecule_type(self.object1) == "Protein":
+            atoms1 = list(functions.get_backbone_atoms_protein(self.object1))
+            chain1 = (object1, atoms1) #save chains in a list, check if it's better to store them in a hash
         else:
-            atoms2 = list (self.object2.get_backbone_atoms_nucleicacids )
+            atoms1 = list (functions.get_backbone_atoms_nucleicacids(self.object1))
+            chain1 = (object1, atoms1)
 
-        if len(atoms1) > len(atoms1):
-            atoms1 = atoms1[:len(atoms2)]
+        if functions.get_molecule_type(self.object2) == "Protein":
+            atoms2 = list(functions.get_backbone_atoms_protein(self.object2))
+            chain2 = (object1, atoms2)
         else:
-            atoms2 = atoms2[:len(atoms1)]
+            atoms2 = list (functions.get_backbone_atoms_nucleicacids(self.object2))
+            chain2 = (object2, atoms2)
+
+        if functions.get_molecule_type(self.growth_chain) == "Protein":
+            atoms3 = list(functions.get_backbone_atoms_protein(self.growth_chain))
+            chain3 = (object3, atoms3)
+        else:
+            atoms3 = list (functions.get_backbone_atoms_nucleicacids(self.growth_chain))
+            chain3 = (object3, atoms3)
+
+
+
+        if len(object1[1]) > len(object2[1]):
+            object1[1] = object1[1][:len(obeject2[1])]
+        elif len(object2[1]) > len(object1[1]):
+            object2[1] = object2[1][:len(obeject1[1])]
         
-        self.Superimposer.set_atoms(atoms1, atoms2)
+        return object2
+        
 
-        return self.Superimposer
 
-    def calculate_RMSD (self)
+    def get_homodimer(imposer):
+        """
+        """
+        if object1.id == homodimer.id :
+            assert numpy.abs(superimposition.rms) < 0.000000001
+            assert numpy.max(numpy.abs(superimposition.rotran[1])) < 0.00000001
+            assert numpy.max(numpy.abs(superimposition.rotran[0]) - numpy.identity(3)) < 0.00000001
 
-        imposer = self.imposer
-        rmsd = imposer.rms
-        return rmsd
+        else:
+            pass
+           
+        print("RMS(first model, model %i) = %0.2f" % (object2.id, superimposition.rms))
 
-    print(super_imposer.rms)
+        return homodimer
+
+
+    def complex_builder (self)
+        """
+        """
+        superimposition = Superimposer() 
+			superimposition.set_atoms(object1[1], object2[1])
+			RMSD = superimposition.rms 
+			if RMSD > RMSD_threshold: 
+				continue
+            else:
+                pass
+			superimpositions[(object1.get_id(),object2.get_id())] = superimposition #check if we already have a get_id function
+	        if superimposed_chains is True: 
+	            superimpositions = sorted(superimpositions.items(), key = lambda x: x[1].rms) 
+	    return (superimpositions, best_RMSD, superimposed_chains)
