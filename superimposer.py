@@ -50,11 +50,12 @@ class Superposer (object):
     def get_homodimer(imposer):
         """
         """
-        if object1.id == homodimer.id :
+        homodimers[]
+        if object1 == object2 :
             assert numpy.abs(superimposition.rms) < 0.000000001
             assert numpy.max(numpy.abs(superimposition.rotran[1])) < 0.00000001
             assert numpy.max(numpy.abs(superimposition.rotran[0]) - numpy.identity(3)) < 0.00000001
-
+            homodimers[(chain2, atoms2)]
         else:
             pass
            
