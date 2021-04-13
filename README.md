@@ -42,7 +42,7 @@ https://www.cgl.ucsf.edu/chimera/download.html
 
 ## Theoretical Background
 
-Most of the proteins comprise of a variety of polypeptide chains that make up multi-subunit complexes. Such form is known as the quaternary structure of a protein, which plays a significant role in determining its function, activity and localization. Additionally, these protein subunits may be interacting with nucleic acids (DNA) and ribonucleic acids(RNA) as well. However, comprehending how individual subunits form into bigger complexes is not an easy work. In this project, we created a program to create multi-subunit complexes out of its individual pairwise interactions.
+Most of the proteins comprise of a variety of polypeptide chains that make up multi-subunit complexes. Such form is known as the quaternary structure of a protein, which plays a significant role in determining its function, activity and localization. Additionally, these protein subunits may be interacting with nucleic acids (DNA and RNA) as well. However, comprehending how individual subunits form into bigger complexes is not an easy work. In this project, we created a program to create multi-subunit complexes out of its individual pairwise interactions.
 
 In the process of modelling complexes, one of the fundemental steps is to find out which chains shows up in more than one input pair. To evaluate it, we made decision for performing a pairwise sequence allignment between all the chains from the whole set of input pairs. Since we thought that working with normalized values would be better for modeling, the values were divided by the length of the longest chain in the alignment. We considered chains with normalized values 0.9 and higher as equal.
 
