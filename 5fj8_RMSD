@@ -1,0 +1,45 @@
+Model 0 (testing_5fj8.pdb) appears to be a protein without secondary structure assignments.
+Automatically computing assignments using 'ksdssp' and parameter values:
+  energy cutoff -0.5
+  minimum helix length 3
+  minimum strand length 3
+Use command 'help ksdssp' for more information.
+#1, chain A: DNA-directed RNA polymerase III subunit RPC1
+#1, chain B: DNA-directed RNA polymerase III subunit RPC2
+#1, chain C: DNA-directed RNA polymerases I and III subunit RPAC1
+#1, chain D: DNA-directed RNA polymerase III subunit RPC9
+#1, chain E: DNA-directed RNA polymerases I, II, and III subunit rpabc 1
+#1, chain F: DNA-directed RNA polymerases I, II, and III subunit RPABC2
+#1, chain G: DNA-directed RNA polymerase III subunit RPC8
+#1, chain H: DNA-directed RNA polymerases I, II, and III subunit rpabc 3
+#1, chain I: DNA-directed RNA polymerase III subunit RPC10
+#1, chain J: DNA-directed RNA polymerases I, II, and III subunit rpabc 5
+#1, chain K: DNA-directed RNA polymerases I and III subunit RPAC2
+#1, chain L: DNA-directed RNA polymerases I, II, and III subunit rpabc 4
+#1, chain M: DNA-directed RNA polymerase III subunit RPC5
+#1, chain N: DNA-directed RNA polymerase III subunit RPC4
+#1, chain O: DNA-directed RNA polymerase III subunit RPC3
+#1, chain P: DNA-directed RNA polymerase III subunit RPC6
+#1, chain Q: DNA-directed RNA polymerase III subunit RPC7
+#1, chain R: RNA
+#1, chain S: non-template DNA
+#1, chain T: template DNA
+5fj8 opened
+Computing secondary structure assignments for model(s) #0, #1
+using ksdssp (Kabsch and Sander Define Secondary Structure
+of Proteins) with the parameters:
+  energy cutoff -0.5
+  minimum helix length 3
+  minimum strand length 3
+
+Matchmaker testing_5fj8.pdb, chain a (#0) with 5fj8, chain A (#1), sequence alignment score = 7172.9
+with these parameters:
+	chain pairing: bb
+	Needleman-Wunsch using BLOSUM-62
+	ss fraction: 0.3
+	gap open (HH/SS/other) 18/18/6, extend 1
+	ss matrix:  (O, S): -6 (H, O): -6 (H, H): 6 (S, S): 6 (H, S): -9 (O, O): 4
+	iteration cutoff: 2
+RMSD between 1422 pruned atom pairs is 0.000 angstroms; (across all 1422 pairs: 0.000)
+
+
