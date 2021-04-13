@@ -55,7 +55,7 @@ A module is a file containing Python definitions and statements. It is important
 
 * <b>projectstart.py</b>: <i>main</i> module created to reconstruct a macrocomplex given a set of interacting pairs. It also considers the possibility to rebuild a macrocomplex if the input is a macrocomplex (.pdb). 
 
-  Furthermore, this module inludes the ArgumentParser object, created using argparse module, which is used for command-line options, arguments and sub-commands. The ArgumentParser object will hold all the information necessary to parse the command line into Python data types.
+  Furthermore, this module inludes the ArgumentParser object, created using argparse module, which is used for command-line options, arguments and sub-commands.
   
 * <b>functions.py</b>: this module is composed by a set of different <b>functions</b> to solve biological and technical problems during the analysis. Thus, it is imported into the other modules in order to use the defined functions.  
 
