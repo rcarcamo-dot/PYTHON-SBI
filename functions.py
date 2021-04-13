@@ -92,3 +92,9 @@ def process_stoichiometry:
     if options.verbose:
         sys.stderr.write("Stoichiometry: %s\n" % options.stoichiometry)
 	
+def check_stoichiometry:
+    stoich_chains = set(list(similar_chains.values()))
+
+    if len(stoich_chains) < len(stoich_dict):
+        raise ValueError("Unmatching stoichiometry: Provided stoichiometry contains %d different chains, but "
+                         "the input PDBs only have %d unique chains." % (len(stoich_dict), len(stoich_set)))
