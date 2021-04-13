@@ -258,12 +258,13 @@ for chain in forAlignmentlist:
 		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
 			correctinglength = max(len(chain[1]),len(secondchain[1]))
 			Align_result = pairwise2.align.globalxx(chain[1],secondchain[1])
-			writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
-			if options.threshold <=  Align_result[0][2]/correctinglength:
-				if chain[0] in chainpair_dict:
-					chainpair_dict[chain[0]].append(secondchain[0])
-				else:
-					chainpair_dict[chain[0]] = [secondchain[0]]
+			if not len(Align_result) == 0:
+				writeresult.write(chain[0]+"\t"+secondchain[0]+"\t"+str(Align_result[0][2]/correctinglength)+"\n")
+				if options.threshold <=  Align_result[0][2]/correctinglength:
+					if chain[0] in chainpair_dict:
+						chainpair_dict[chain[0]].append(secondchain[0])
+					else:
+						chainpair_dict[chain[0]] = [secondchain[0]]
 				#print(Align_result[0][2])
 
 if options.verbose:
@@ -299,6 +300,10 @@ for key in chainpair_dict:
 if options.verbose:
 	print("###\n### The best starting reference chain is", initialref, " with ",  mostmatch ,"matches\n###\n\n")
 
+""" Here I am constructing the starting structure of the model with the intitial reference pair of chains
+that I calculated in the previous step. The information for the chains contained in the model is saved is 
+stored in the model_chain_id_contained dictionary (by the orginal chain id) this is to know what further matches
+I can add to the model. Only interactions that contain a chain that is found in the model are interesting."""
 model_chain_id_contained = {}
 model_indicator = 1
 working_model = Bio.PDB.Model.Model(model_indicator)
@@ -309,11 +314,15 @@ working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].sp
 model_chain_id_contained[list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0].id] = 1
 
 #exit(0)
-
-chain_match_list = []
+""" Here I construct a list of the chains that are going to be  """
+chain_match_list = {}
 for x in chainpair_dict:
 	static_file = x.split(".pdb_")[0] + ".pdb"
 	static_chain = list(AllChains[static_file][x.split(".pdb_")[1]].values())[0]
+	for char in x.split(".pdb_")[0].split("_"):
+		if x.split(".pdb_")[0].split("_").index(char) != 0 and char != x.split(".pdb_")[1]:
+			static_alt_chain = list(AllChains[static_file][char].values())[0]
+
 	for string in chainpair_dict[x]:
 		chain_name = string.split(".pdb_")[1]
 		file = string.split(".pdb_")[0] + ".pdb"
@@ -321,54 +330,119 @@ for x in chainpair_dict:
 			if string.split(".pdb_")[0].split("_").index(char) != 0 and char != chain_name:
 				alt_chain = list(AllChains[file][char].values())[0]
 		chain = list(AllChains[file][chain_name].values())[0]
-		chain_match_list.append((static_chain,chain,alt_chain))
+		chain_match_list[(static_chain,chain,alt_chain,static_alt_chain)] = 1
+
+""" Here I am going through the matches and checking to find what I can line up. I set a while loop 
+that iterates as long as there are still fixed chain references to go by """
+# here I store all of the matches that have already been made
+tuples_used = set()
+number_of_addition = 1
+while number_of_addition != 0:
+	number_of_addition = 0	
+	# I go through each chain in the model (when I add a new one I go through it in the next while loop)
+	for fixed_chain in working_model.get_chains():
+		# now I match that chain up with the moving chains
+		for match_tuple in chain_match_list:
+			if match_tuple[0] == fixed_chain:
+				moving_chain = match_tuple[1]
+				growth_chain  = copy.copy(match_tuple[2])
+
+				new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
+				for residue in growth_chain:
+					new_growth_chain.add(residue.copy())
+				working_model.add(new_growth_chain)
+				number_of_addition += 1
+
+				fixed_atoms = functions.get_the_atoms(fixed_chain)
+				moving_atoms = functions.get_the_atoms(moving_chain)
+				growth_atoms = functions.get_the_atoms(growth_chain)
+
+				if len(fixed_atoms) != len(moving_atoms):
+					worked_chains = functions.get_worked_chains(fixed_chain, moving_chain)
+					worked_fixed_chain = worked_chains[0]
+					worked_moving_chain = worked_chains[1]
+
+					fixed_atoms = functions.get_the_atoms(worked_fixed_chain)
+					moving_atoms  = functions.get_the_atoms(worked_moving_chain)
+
+				superpositioning = Bio.PDB.Superimposer()
+				superpositioning.set_atoms(fixed_atoms,moving_atoms)
+				superpositioning.apply(new_growth_chain.get_atoms())
+
+				flag = True
+				if not functions.ensure_no_clashing(working_model, new_growth_chain):
+					working_model.detach_child(new_growth_chain.id)
+					number_of_addition = number_of_addition - 1
+					flag = False
+				if flag:
+					model_chain_id_contained[match_tuple[2].id] = 1
+				tuples_used.add(match_tuple)
+		""" Because I arbitrarily decided that the first chain in the alignments would 
+		be considered the 'static' chain I have to now check to make sure that if I used
+		the second chain isn't included in the model for some reason 
+		THis is just a failsafe and should not be necessary based on how I set up the alignment
+		(in the sense that I only compared going forward and didn't align back. I may be able
+		to remove this repetition"""
+
+
+		for match_tuple in chain_match_list:
+			if match_tuple[1] == fixed_chain:
+				moving_chain = match_tuple[0]
+				growth_chain  = copy.copy(match_tuple[3])
+
+				new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
+				for residue in growth_chain:
+					new_growth_chain.add(residue.copy())
+				working_model.add(new_growth_chain)
+				number_of_addition += 1
+
+				fixed_atoms = functions.get_the_atoms(fixed_chain)
+				moving_atoms = functions.get_the_atoms(moving_chain)
+				growth_atoms = functions.get_the_atoms(growth_chain)
+
+				if len(fixed_atoms) != len(moving_atoms):
+					worked_chains = functions.get_worked_chains(fixed_chain, moving_chain)
+					worked_fixed_chain = worked_chains[0]
+					worked_moving_chain = worked_chains[1]
+
+					fixed_atoms = functions.get_the_atoms(worked_fixed_chain)
+					moving_atoms  = functions.get_the_atoms(worked_moving_chain)
+
+				superpositioning = Bio.PDB.Superimposer()
+				superpositioning.set_atoms(fixed_atoms,moving_atoms)
+				superpositioning.apply(new_growth_chain.get_atoms())
+
+				flag = True
+				if not functions.ensure_no_clashing(working_model, new_growth_chain):
+					working_model.detach_child(new_growth_chain.id)
+					number_of_addition = number_of_addition - 1
+					flag = False
+				if flag:
+					model_chain_id_contained[match_tuple[3].id] = 1
+				tuples_used.add(match_tuple)
 
 
 
-for fixed_chain in working_model.get_chains():
-	for match_tuple in chain_match_list:
-		if match_tuple[0] == fixed_chain:
-			moving_chain = match_tuple[1]
-			growth_chain  = copy.copy(match_tuple[2])
-
-			new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
-			for residue in growth_chain:
-				new_growth_chain.add(residue.copy())
-			working_model.add(new_growth_chain)
-
-			fixed_atoms = functions.get_the_atoms(fixed_chain)
-			moving_atoms = functions.get_the_atoms(moving_chain)
-			growth_atoms = functions.get_the_atoms(growth_chain)
-
-			if len(fixed_atoms) != len(moving_atoms):
-				worked_chains = functions.get_worked_chains(fixed_chain, moving_chain)
-				worked_fixed_chain = worked_chains[0]
-				worked_moving_chain = worked_chains[1]
-
-				fixed_atoms = functions.get_the_atoms(worked_fixed_chain)
-				moving_atoms  = functions.get_the_atoms(worked_moving_chain)
-
-			superpositioning = Bio.PDB.Superimposer()
-			superpositioning.set_atoms(fixed_atoms,moving_atoms)
-			superpositioning.apply(new_growth_chain.get_atoms())
-
-			if not functions.ensure_no_clashing(working_model, new_growth_chain):
-				working_model.detach_child(new_growth_chain.id)
 
 
+
+print(tuples_used)
 
 ### THIS IS THE ISSSUE the ids have to be letters!!!!!!!!!
 
 
-manualOveride = ["A","B","C","D"]
-i=0
+manualOveride = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+              'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+              'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!',
+              '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@',
+              '[', ']', '^', '_', '`', '{', '|', '}', '~']
+
 for x in working_model:
-	x.id = manualOveride[i]
-	i += 1
+	x.id = manualOveride.pop(0)
 	print(x.id)
+print(model_chain_id_contained)
 
-
-model_filename = options.output + "/testing_gzx.pdb"
+model_filename = options.output + "/testing_5fj8.pdb"
 io = Bio.PDB.PDBIO()
 io.set_structure(working_model)
 io.save(model_filename)
