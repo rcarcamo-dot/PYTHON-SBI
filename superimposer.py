@@ -55,25 +55,35 @@ class Superposer (object):
             assert numpy.max(numpy.abs(superimposition.rotran[1])) < 0.00000001
             assert numpy.max(numpy.abs(superimposition.rotran[0]) - numpy.identity(3)) < 0.00000001
             homodimer = [(chain2, atoms2)]
+            print("RMS(first model, model %i) = %0.2f" % (homodimer.id, superimposition.rms))
         else:
-            pass
+            heterodimer = [(chain2, atoms2)]
            
-        print("RMS(first model, model %i) = %0.2f" % (object2.id, superimposition.rms))
+        print("RMS(first model, model %i) = %0.2f" % (heterodimer.id, superimposition.rms))
 
-        return homodimer
+        return homodimer, heterodimer
 
 
     def complex_builder (self)
         """
         """
+        
         superimposition = Superimposer() 
-			superimposition.set_atoms(object1[1], object2[1])
-			RMSD = superimposition.rms 
-			if RMSD > RMSD_threshold: 
-				continue
-            else:
-                pass
-			superimpositions[(object1.get_id(),object2.get_id())] = superimposition #check if we already have a get_id function
-	        if superimposed_chains is True: 
-	            superimpositions = sorted(superimpositions.items(), key = lambda x: x[1].rms) 
+		superimposition.set_atoms(object1[1], object2[1])
+		RMSD = superimposition.rms 
+		if RMSD > RMSD_threshold: 
+			continue
+        else:
+            pass
+        #first add homodimer interactions
+        print("Adding homodimers to the model")
+        print("Comparing %s with %s" %(object1, homodimer))
+
+		superimpositions[(object1.get_id(),object2.get_id())] = superimposition #check if we already have a get_id function
+	    if superimposed_chains is True: 
+	        superimpositions = sorted(superimpositions.items(), key = lambda x: x[1].rms) 
 	    return (superimpositions, best_RMSD, superimposed_chains)
+
+        #Now heterodimers
+        print("Adding heterodimers to the model")
+        print("Comparing %s with %s" %(object1, heterodimer))
