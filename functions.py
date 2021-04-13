@@ -67,5 +67,28 @@ def get_molecule_type (chain):
 	return molecule_type
 
 
+def process_stoichiometry:
 
+    stoich = options.stoichiometry
+    stoich_dict = {}
+    i = 0
+    j = 0
+    while i < len(stoich):
+        if stoich[i].isalpha():
+            stoich_dict[stoich[i]] = ""
+            j += 1
+            while stoich[j].isdigit():
+                stoich_dict[stoich[i]] += str(stoich[j])
+                if j < (len(stoich) - 1):
+                    j += 1
+                else:
+                    break
+        i += 1
+        j = i
+
+    stoich_dict = {x: int(y) for x, y in stoich_dict.items()}
+    k = sum(list(stoich_dict.values()))
+
+    if options.verbose:
+        sys.stderr.write("Stoichiometry: %s\n" % options.stoichiometry)
 	
