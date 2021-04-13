@@ -102,7 +102,7 @@ If the <b>default options</b> are set, these are the following outputs:
 
 <b>files</b>: 
 
- - Result_of_Alignments.txt: file genereated from the pairwiise comparisons between all the inputs.
+ - Result_of_Alignments.txt: file genereated from the pairwise comparisons between all the inputs.
 
 
 
