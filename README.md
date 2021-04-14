@@ -54,6 +54,30 @@ The necessity for a program that is able to construct a full scale macrocomplex 
 
 ### Installation
 
+In order to run the program, it would be required to run the following commands:
+
+```
+python3 setup.py install
+```
+Or if you are running from a Windows machine:
+
+```
+setup.py install
+```
+Running setup.py install compiles and installs all modules in a single run. If you want to customize the compilation process, or if things go wrong, you can use the configuration script to do one thing at a time.
+
+```
+python setup.py build
+python setup.py install
+```
+In this case, the build command is responsible for placing the files to be installed in a build directory.
+
+There is also an alternative installation required for those users whoo do noot have write permission to the site's global package directory or do not want to install into it. This option is activated by the following command:
+
+```
+python setup.py install --user
+```
+
 ### Input Files
 
 The input files must be pairs of interacting chains (.pdb), which has to be located into a directory decided by the user. This directory can also be in <i>tar.gz</i> format.
