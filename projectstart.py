@@ -3,7 +3,6 @@ import argparse
 import gzip
 import os
 import FileExplorer
-import FunctionHodgepodge as FH
 import functions
 import superimposer
 import Bio.PDB
@@ -82,10 +81,16 @@ except:
 if options.verbose:
 	print("Checking format of input files and gathering file and chain names...\n\n")
 
+
+
+##################                  ##################
+##################  Initial Setup   ##################
+##################                  ##################
+
 Allinteractions = [] # This variable stores the name of the files within the input directory
 File_chain_pair = [] # This variable contains tuples of all of the chains and files that they are located in
 ####
-###  The files storage variable above may have to be changed to account for other types of files contained besides just pfb (interactions)
+###  The files storage variable above may have to be changed to account for other types of files contained besides just pdb (interactions)
 ####
 
 for file in files:
@@ -154,6 +159,7 @@ for file in Allinteractions:
 	Zip = "FALSE"
 	if ".gz" in file:
 		Zip = "TRUE"
+	# I send the information to the pdb extractor.
 	pdb = FileExplorer.pdb(filepath, file, Zip )
 	contained_chain_names = []
 	for element in file.split(".pdb")[0].split("_"):
@@ -165,6 +171,9 @@ for file in Allinteractions:
 	object with the filename and the name of the chain. For this I am setting up a new unique id for
 	each chain that will allow me to use it as key in a dictionary and then having a translation dictionary
 	that can let me know which original chain that belonged to"""
+	""" I was originally going to create a subclass of the chain class that contained a hashing function
+	so that I could just use the chain as a key, but since I though of this after a bunch of coding this solution 
+	was easier than going back to rewrite the class that I used. """
 
 	for chain in pdb.get_chain():
 		onetuple = (file,chain)
@@ -177,6 +186,10 @@ for file in Allinteractions:
 		AllChains[file][old_id][chain.id] = ""
 		#exit(0) 
 
+
+####
+####
+####
 """ this following loop prints the translation dictionary """
 
 #for newchain_id in newchain_id_old_id:
@@ -188,12 +201,19 @@ for file in Allinteractions:
 #		print(AllChains[file][old_id])
 #		for new_id in AllChains[file][old_id]:
 #			print(newchain_id_old_id[new_id])
-
-#exit(0)
-
+####
+####
+####
 
 """ So after that last step we now have a list of chain objects from which we can retrieve information 
 This list is stored as a value inside a dictionary that has the filename from which they came from as the key"""
+
+
+
+##################                             ##################
+##################   Information Processing    ##################
+##################                             ##################
+
 
 """ Now I will try to align the chains across file pairs to try and find matches
 In order to do this I will first have to get the sequences of each chain object so that I can align them."""
@@ -203,7 +223,8 @@ if options.verbose:
 
 # new_id_to_chain_dict = {}  <<< incase i need this (superimposer does it)
 
-""" Here i am going to get the Ca atoms for eventual superposition for each chain and save them in the dictionary that I created"""
+""" Backbone atoms are retrieved later now. Here I am just saving the chain. Incase this changes in future iterations of 
+the program I am keeping the structure to save the backbone atoms commented"""
 for file in AllChains:
 	i=0
 	for chain in AllChains[file]:
@@ -215,7 +236,7 @@ for file in AllChains:
 						# file is the first key (file of origin for the chain)
 						# chain is second key (original chain id)
 						# chain_object_id is third key (new chain id)
-						# I am now adding the list of backbone atoms as final value
+						# I am now adding the chain as the final value
 						AllChains[file][chain][chain_object_id] = chaincheck
 						#AllChains[file][chain][chain_object_id] = functions.get_backbone_atoms_protein(chaincheck)  <<< incase i need this (superimposer does it)
 					else:
@@ -225,8 +246,8 @@ for file in AllChains:
 
 
 """ in order to avoid calculating the sequences multiple times
-I am just going place the sequences and their identifiers in a list of tuples
-or maybe a dictionary"""
+I am just going place the sequences and their identifiers in a list of tuples to be used
+in the Alignment"""
 
 if options.verbose:
 	print("Saving sequences...\n\n")
@@ -245,14 +266,15 @@ if options.verbose:
 """ Here I am going to perform the alignments. i am saving the results of the 
 alignment to a file named Resuts_of_Alignments.txt that will be located in the user
 provided outputs directory. In order to identify the iddentical chains I take the alignment
-score and devide it by the maximum sequence length of the two aligned sequences.
-It is probably a better idea to filter out the identical sequences now rather than going throug
-this file later to get the matches. I would use a user provided threshold to calculate this."""
+score and devide it by the maximum sequence length of the two aligned sequences.This normalizes the score.
+Now I can apply the user provided threshold to find identical sequences."""
 writeresult = open(options.output + "/Results_of_Alignments.txt", "w")
 Filesdone = {}
 chainpair_dict = {}
 writeresult.write("id1\tid2\tscore\n")
 for chain in forAlignmentlist:
+	if options.verbose:
+		print(f"Aligning chain {chain[0]}...\n")
 	Filesdone[chain[0]] = ""
 	for secondchain in forAlignmentlist: 
 		if secondchain[0] not in Filesdone and chain[0][:-2] != secondchain[0][:-2]:
@@ -268,7 +290,7 @@ for chain in forAlignmentlist:
 				#print(Align_result[0][2])
 
 if options.verbose:
-	print("###\n### Alignments are saved in outputs folder as \"Results_of_Alignments.txt\"\n###\n\n")
+	print("###\n### Alignments are saved in outputs directory as \"Results_of_Alignments.txt\"\n###\n\n")
 """ So the matching Chains have been identified, and are stored in a file within the outputs directory.
 The file where the information can be found is called "Results_of_Alignments.txt". The format of the file
 is tab seperated. In the first two columns are the identifiers of the two chain pairs. The way how the chains are
@@ -283,9 +305,6 @@ if not os.path.exists(created_models):
 
 if options.verbose:
 	print("Checking for the best starting reference chains...\n\n")
-##
-## Turn this into a function
-##
 
 
 """ I am simply checking which of the chains has the most matches associated with it 
@@ -297,24 +316,46 @@ for key in chainpair_dict:
 		initialref = key
 		mostmatch = len(chainpair_dict[key])
 
+
+
+
 if options.verbose:
 	print("###\n### The best starting reference chain is", initialref, " with ",  mostmatch ,"matches\n###\n\n")
 
+
+
+##################                        ##################
+##################   Model Construction   ##################
+##################                        ##################
+
+
+if options.verbose:
+	print("Building up the first chains of the model...\n\n")
 """ Here I am constructing the starting structure of the model with the intitial reference pair of chains
 that I calculated in the previous step. The information for the chains contained in the model is saved is 
 stored in the model_chain_id_contained dictionary (by the orginal chain id) this is to know what further matches
 I can add to the model. Only interactions that contain a chain that is found in the model are interesting."""
+# a variable that saves what chain is in the model (need this to check for matches)
 model_chain_id_contained = {}
+# a modelindicator serves as the id, I could take user input to act as id as well. Not necessary though
 model_indicator = 1
+# The working model starts here (called working model because it isnt the completed one yet)
 working_model = Bio.PDB.Model.Model(model_indicator)
+# getting the file of the initial chains
 reference_file = initialref.split(".pdb_")[0] + ".pdb"
+# adding the two chains to the model. We now have the beginnings of a model
 working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[1]].values())[0])
 model_chain_id_contained[list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[1]].values())[0].id] = 1
 working_model.add(list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0])
 model_chain_id_contained[list(AllChains[reference_file][initialref.split(".pdb_")[0].split("_")[2]].values())[0].id] = 1
 
 #exit(0)
-""" Here I construct a list of the chains that are going to be  """
+""" Here I am constructing a dictionary that saves the information about the matches that were found.
+all of the chains involved in the relationship are saved here with the role being reflected in the 
+position in the tuple. I also save the static alternate chain incase I need it (its part of the 
+failsafe that I implement in the model constructon)the information is saved in a tuple acting as a key in the dictonary """
+if options.verbose:
+	print("Setting up matches ...\n\n")
 chain_match_list = {}
 for x in chainpair_dict:
 	static_file = x.split(".pdb_")[0] + ".pdb"
@@ -333,9 +374,14 @@ for x in chainpair_dict:
 		chain_match_list[(static_chain,chain,alt_chain,static_alt_chain)] = 1
 
 """ Here I am going through the matches and checking to find what I can line up. I set a while loop 
-that iterates as long as there are still fixed chain references to go by """
-# here I store all of the matches that have already been made
+that iterates as long as there are still fixed chain references to go by. I break the while loop as 
+soon as there have been no new chain additions to the model because if nothing new was added then the next 
+run through will give me no new results. If however a single chain is added to the model I must continue looping through """
+# here I store all of the matches that have already been made (this is just for trouble shooting)
+if options.verbose:
+	print("Beginning Model Construction...\n\n")
 tuples_used = set()
+# variable storing the number of additions per round
 number_of_addition = 1
 while number_of_addition != 0:
 	number_of_addition = 0	
@@ -346,8 +392,10 @@ while number_of_addition != 0:
 			if match_tuple[0] == fixed_chain:
 				moving_chain = match_tuple[1]
 				growth_chain  = copy.copy(match_tuple[2])
-
+				# I add an id to the new growth chain that will be generated at random	
 				new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
+				while new_growth_chain.id in model_chain_id_contained:
+					new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
 				for residue in growth_chain:
 					new_growth_chain.add(residue.copy())
 				working_model.add(new_growth_chain)
@@ -376,7 +424,11 @@ while number_of_addition != 0:
 					flag = False
 				if flag:
 					model_chain_id_contained[match_tuple[2].id] = 1
+					model_chain_id_contained[new_growth_chain.id] = 1
+					if options.verbose:
+						print("The Protein welcomes a new chain into the fold...\n\n")
 				tuples_used.add(match_tuple)
+				
 		""" Because I arbitrarily decided that the first chain in the alignments would 
 		be considered the 'static' chain I have to now check to make sure that if I used
 		the second chain isn't included in the model for some reason 
@@ -389,8 +441,9 @@ while number_of_addition != 0:
 			if match_tuple[1] == fixed_chain:
 				moving_chain = match_tuple[0]
 				growth_chain  = copy.copy(match_tuple[3])
-
 				new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
+				while new_growth_chain.id in model_chain_id_contained:
+					new_growth_chain = Bio.PDB.Chain.Chain(random.randint(0,100000))
 				for residue in growth_chain:
 					new_growth_chain.add(residue.copy())
 				working_model.add(new_growth_chain)
@@ -419,256 +472,62 @@ while number_of_addition != 0:
 					flag = False
 				if flag:
 					model_chain_id_contained[match_tuple[3].id] = 1
+					model_chain_id_contained[new_growth_chain.id] = 1
+					if options.verbose:
+						print("The Protein welcomes a new chain into the fold...\n\n")
 				tuples_used.add(match_tuple)
 
 
 
+if options.verbose:
+	print("Construction has finished...\n\n")
 
 
 
-print(tuples_used)
-
-### THIS IS THE ISSSUE the ids have to be letters!!!!!!!!!
 
 
+""" I had an issue using integers as chain ids and found out that they have to be characters so I set up this overide to fix it """
+### THIS IS THE ISSSUE the ids have to be characters!!!!!!!!!
 manualOveride = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
               'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
               'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!',
               '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@',
               '[', ']', '^', '_', '`', '{', '|', '}', '~']
-
+"""
 for x in working_model:
 	x.id = manualOveride.pop(0)
 	print(x.id)
 print(model_chain_id_contained)
-
-model_filename = options.output + "/testing_5fj8.pdb"
-io = Bio.PDB.PDBIO()
-io.set_structure(working_model)
-io.save(model_filename)
-
-
-
-
-
-exit(0)
-
-
-
-
-
-########
-########
-########
-########
-########  THe rest is unused code at the moment (lots of problem solving)
-########
-########
-########
-########
-########
-
-
-
-
-
-
-
-
-for match in chainpair_dict[initialref]:
-	reference_file = initialref.split(".pdb_")[0] + ".pdb"
-	reference_chain = initialref.split(".pdb_")[1]
-	match_file = match.split(".pdb_")[0] + ".pdb"
-	match_chain = match.split(".pdb_")[1]	
-	for element in match.split(".pdb_")[0].split("_"):
-		if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
-			added_id = list(AllChains[match_file][element].values())[0].id
-			list(AllChains[match_file][element].values())[0].id = random.randint(0,1000000)
-			growth_chain = copy.copy(list(AllChains[match_file][element].values())[0])
-	if list(AllChains[reference_file][reference_chain].values())[0].id in model_chain_id_contained:
-		for chain in working_model:
-			if chain.id == list(AllChains[reference_file][reference_chain].values())[0].id:
-				fixed_chain = chain
-		moving_chain = list(AllChains[match_file][match_chain].values())[0]
-
-		superimposition = Superimposer()
-		worked_atoms_list = functions.get_worked_chains(fixed_chain,moving_chain)
-		new_fixed_atoms = functions.get_the_atoms(worked_atoms_list[0])
-		new_moving_atoms = functions.get_the_atoms(worked_atoms_list[1])
-		if len(new_fixed_atoms) > len(new_moving_atoms):
-			new_fixed_atoms = new_fixed_atoms[:len(new_moving_atoms)]
-		else:
-			new_moving_atoms = new_moving_atoms[:len(new_fixed_atoms)]
-		superimposition.set_atoms(new_fixed_atoms, new_moving_atoms)
-		working_model.add(growth_chain)
-		superimposition.apply(growth_chain)
-		flag = 0
-		if not functions.ensure_no_clashing(working_model, growth_chain):
-			working_model.detach_child(growth_chain.id)
-			print("clash")
-			flag = 1
-		if flag == 0:
-			model_chain_id_contained[added_id] = 1
-
-
-del chainpair_dict[initialref]
-
-for ref in chainpair_dict:
-	#Already_added_files = {}
-	for match in chainpair_dict[ref]:
-		reference_file = initialref.split(".pdb_")[0] + ".pdb"
-		reference_chain = initialref.split(".pdb_")[1]
-		match_file = match.split(".pdb_")[0] + ".pdb"
-		match_chain = match.split(".pdb_")[1]
-		for element in match.split(".pdb_")[0].split("_"):
-			if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
-				list(AllChains[match_file][element].values())[0].id = random.randint(0,1000000)
-				growth_chain = copy.copy(list(AllChains[match_file][element].values())[0])
-
-		if list(AllChains[reference_file][reference_chain].values())[0].id in model_chain_id_contained:
-			for chain in working_model:
-				if chain.id == list(AllChains[reference_file][reference_chain].values())[0].id:
-					fixed_chain = chain
-			moving_chain = list(AllChains[match_file][match_chain].values())[0]
-
-			superimposition = Superimposer()
-			worked_atoms_list = functions.get_worked_chains(fixed_chain,moving_chain)
-			new_fixed_atoms = functions.get_the_atoms(worked_atoms_list[0])
-			new_moving_atoms = functions.get_the_atoms(worked_atoms_list[1])
-			if len(new_fixed_atoms) > len(new_moving_atoms):
-				new_fixed_atoms = new_fixed_atoms[:len(new_moving_atoms)]
-			else:
-				new_moving_atoms = new_moving_atoms[:len(new_fixed_atoms)]
-			superimposition.set_atoms(new_fixed_atoms, new_moving_atoms)
-			working_model.add(growth_chain)
-			superimposition.apply(growth_chain)
-			flag = 0
-			if not functions.ensure_no_clashing(working_model, growth_chain):
-				working_model.detach_child(growth_chain.id)
-				print("clash")
-				flag = 1
-			if flag == 0:
-				model_chain_id_contained[added_id] = 1
-
-
-
-
-		#exit(0)
-			
-io = Bio.PDB.PDBIO()
-model_filename = options.output + "/tested_1gzx"
-for x in working_model.get_chains():
-	print(x)
-	"""
-	io.set_structure(working_model)
-	new_model_filename = model_filename + "_" + str(x.id) + ".pdb"
-	io.save(new_model_filename) 
-	"""
-
-model_filename = options.output + "/tested_1gzx.pdb"
-io = Bio.PDB.PDBIO()
-io.set_structure(working_model)
-io.save(model_filename)
-
-
-exit(0)
-
-
-
-##
-## that is function
-##
-
-##
-## this could also be a function
-##
-Already_added_id = {}
-
-for match in chainpair_dict[initialref]:
-	reference_file = initialref.split(".pdb_")[0] + ".pdb"
-	reference_chain = initialref.split(".pdb_")[1]
-	match_file = match.split(".pdb_")[0] + ".pdb"
-	match_chain = match.split(".pdb_")[1]
-	for element in match.split(".pdb_")[0].split("_"):
-		if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
-			growth_chain = element
-
-	#exit(0)
-	if list(AllChains[match_file][growth_chain].values())[0].id not in Already_added_id:
-
-		test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
-		chain_addition = test_impose.imposer()
-		if functions.ensure_no_clashing(working_model, chain_addition):
-			working_model.add(chain_addition)
-			Already_added_id[list(AllChains[match_file][growth_chain].values())[0].id] = 1
-		else:
-			print("get this sucka outa here!  ", match_file, " ", match_chain )
-	else:
-		while list(AllChains[match_file][growth_chain].values())[0] in Already_added_id:
-			list(AllChains[match_file][growth_chain].values())[0].id = random.randint(0,1000000)
-		test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
-		chain_addition = test_impose.imposer()
-		if functions.ensure_no_clashing(working_model, chain_addition):
-			working_model.add(chain_addition)
-			Already_added_id[list(AllChains[match_file][growth_chain].values())[0].id] = 1
-		else:
-			print("get this sucka outa here!  ", match_file, " ", match_chain )
-	#print(AllChains[match_file][growth_chain])
-
 """
-
-del chainpair_dict[initialref]
-
-for ref in chainpair_dict:
-	#Already_added_files = {}
-	for match in chainpair_dict[ref]:
-		Already_added_files = {}
-		reference_file = initialref.split(".pdb_")[0] + ".pdb"
-		reference_chain = initialref.split(".pdb_")[1]
-		match_file = match.split(".pdb_")[0] + ".pdb"
-		match_chain = match.split(".pdb_")[1]
-		for element in match.split(".pdb_")[0].split("_"):
-			if match.split(".pdb_")[0].split("_").index(element) != 0 and element != reference_chain:
-				growth_chain = element
-
-		#exit(0)
-
-		if match_file not in Already_added_files:
-			test_impose = superimposer.Superposer(list(AllChains[reference_file][reference_chain].values())[0], list(AllChains[match_file][match_chain].values())[0], list(AllChains[match_file][growth_chain].values())[0])
-			chain_addition = test_impose.imposer()
-			if functions.ensure_no_clashing(working_model, chain_addition):
-				working_model.add(chain_addition)
-				Already_added_files[match_file] = 1
-			else:
-				print("get this sucka outa here!  ", match_file, " ", match_chain )
-		#print(AllChains[match_file][growth_chain])
-
-
-"""
-model_filename = options.output + "/tested_1gzx.pdb"
+name = reference_file.split("_")[0]
+model_filename = options.output + name + ".pdb"
 io = Bio.PDB.PDBIO()
 io.set_structure(working_model)
 io.save(model_filename)
 
-#exit(0)
-for x in working_model.get_chains():
-	print (x)
+if options.verbose:
+	print("###\n### The PDB file of the protein has been saved at: ", model_filename, "\n###\n\n")
+
+
+
 exit(0)
 
-for file in AllChains:
-	print(file)
-	for chain in AllChains[file]:
-		print(chain, " <<< ")
-	
-##
-## that is function
-##
 
 
-# model > 1gzx_A_B.pdb + 1gzx_D_B.pdb_B + 
 
 
-# 1gzx_A_B.pdb_A -> 1gzx_D_B.pdb_D
+########
+########
+########
+########
+########  THE END 
+########
+########
+########
+########
+########
+
+
 
 
 
