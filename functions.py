@@ -9,6 +9,7 @@ from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 
 class IncorrectInput(NameError):
+	""" a function that tells whether or not a directory name is infact a directory"""
 	def __init__(self,input):
 		self.input = input
 	def __str__(self):
@@ -55,6 +56,7 @@ def get_backbone_atoms_nucleicacids (chain):
 
 
 def get_sequence (chain):
+	""" Retrieves and returns the sequence of a chain"""
 	sequence = ""
 	for residue in chain:
 		if residue.get_id()[0] == " " and residue.has_id("CA"):
@@ -102,6 +104,9 @@ def ensure_no_clashing(model, growth_chain):
 		return False
 
 def prep_superimpose(fixed_chain, moving_chain):
+	""" This function takes two chains and prepares them for superimposing.
+	it makes sure that all of teh residues will be alignable. Otherwise we wont be able to get the correct 
+	rot and trans information"""
 	fixed_chain = fixed_chain
 	moving_chain = moving_chain
 	fixed_chain_sequence = get_sequence(fixed_chain) 
@@ -127,6 +132,9 @@ def prep_superimpose(fixed_chain, moving_chain):
 	return chains_pattern
 
 def get_worked_chains(fixed_chain, moving_chain):
+	""" This takes two chains and applies the patterin gained from the prep superimpose
+	function and applies it to the sequence. Basically if a residue is not shared it is not 
+	used in the superimposition """
 	new_fixed_chain = Bio.PDB.Chain.Chain('X')
 	new_moving_chain = Bio.PDB.Chain.Chain('Y')
 	fixed_chain = fixed_chain
@@ -140,6 +148,7 @@ def get_worked_chains(fixed_chain, moving_chain):
 	return (new_fixed_chain,new_moving_chain)
 
 def get_the_atoms(chain):
+	""" retrieves a list of the atoms contained in a chain """
 	if get_molecule_type(chain) == "Protein":
 		atoms = list(get_backbone_atoms_protein(chain))
 	else:
