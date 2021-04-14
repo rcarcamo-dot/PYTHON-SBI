@@ -1,0 +1,28 @@
+#0, chain A: odorant receptor
+#0, chain B: odorant receptor
+#0, chain C: odorant receptor
+#0, chain D: odorant receptor
+Model 1 (6c70.pdb) appears to be a protein without secondary structure assignments.
+Automatically computing assignments using 'ksdssp' and parameter values:
+  energy cutoff -0.5
+  minimum helix length 3
+  minimum strand length 3
+Use command 'help ksdssp' for more information.
+Computing secondary structure assignments for model(s) #0, #1
+using ksdssp (Kabsch and Sander Define Secondary Structure
+of Proteins) with the parameters:
+  energy cutoff -0.5
+  minimum helix length 3
+  minimum strand length 3
+
+Matchmaker 6c70.pdb, chain A (#0) with 6c70.pdb, chain a (#1), sequence alignment score = 1941.8
+with these parameters:
+	chain pairing: bb
+	Needleman-Wunsch using BLOSUM-62
+	ss fraction: 0.3
+	gap open (HH/SS/other) 18/18/6, extend 1
+	ss matrix:  (O, S): -6 (H, O): -6 (H, H): 6 (S, S): 6 (H, S): -9 (O, O): 4
+	iteration cutoff: 2
+RMSD between 388 pruned atom pairs is 0.000 angstroms; (across all 388 pairs: 0.000)
+
+
