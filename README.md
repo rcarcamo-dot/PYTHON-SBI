@@ -15,7 +15,7 @@
 - [Tutorial](#Tutorial)
   - [Input Files](#Input-Files)
   - [Python Modules](#Python-Modules)
-  - [Output Files](#Output-Files)
+  - [Command Line Arguments](#Command-Line-Arguments)
   - [Analysis of Reconstructed Macromolecules](#Analysis-of-Reconstructed-Macromolecules)
 - [Limitations](#Limitations) 
   
@@ -67,7 +67,7 @@ A module is a file containing Python definitions and statements. It is important
 
 * <b>FileExplorer.py</b>: This class is implemented to apply the PDB.Parser package in order to convert chains within a pdb file into chain objects. It is able to do this regardless of whether the files are gziped or not. 
 
-### Output Files
+### Command Line Arguments
 
 It is necessary to consider that the output files will depend on the command-line options and arguments the user determines while performing the analysis. All of them will be stored in the output directory selected by the user (-o or --output-directory).
 
@@ -103,12 +103,6 @@ The following <b>arguments</b> are established:
 
   <i>(default: 0.9)</i>  
 
-
-If the <b>default options</b> are set, these are the following outputs:
-
-<b>files</b>: 
-
- - Result_of_Alignments.txt: file genereated from the pairwise comparisons between all the inputs.
 
 ### Analysis of Reconstructed Macromolecules
 
