@@ -78,26 +78,26 @@ The following <b>arguments</b> are established:
 
 * <b> -i, --input-directory  </b>
   
- The input directory should be an existing directory on you computer that contains pdb files of all the interacting chains of a protein that you whish to reconstruct. The command you would give would be  <b>(-i /PATH/to/the/directory)</b>. The name of the files should follow the format of given example : 1gzx_A_B.pdb
+   The input directory should be an existing directory on you computer that contains pdb files of all the interacting chains of a protein that you whish to reconstruct. The command you would give would be  <b>(-i /PATH/to/the/directory)</b>. The name of the files should follow the format of given example : 1gzx_A_B.pdb
 
 
    <i>(default: None)</i>
  
 * <b> -o, --output-directory</b>
  
-  This is a directory which will be created during the program, structured in other subdirectories. The output directory is simply the path to the directory that you wish the output of the program to be saved to <b>(-o /PATH/to/output/folder)</b>. This must be an existing directory on your computer. 
+   This is a directory which will be created during the program, structured in other subdirectories. The output directory is simply the path to the directory that you wish the output of the program to be saved to <b>(-o /PATH/to/output/folder)</b>. This must be an existing directory on your computer. 
   
   <i>(default:None)</i>
   
 * <b> -v, --verbose</b>
 
-  This is a command that tells the program to keep you updated as it is running the program. Just submit (-v) and the program will print to the terminal what exactly it is doing within the compiler. 
+   This is a command that tells the program to keep you updated as it is running the program. Just submit (-v) and the program will print to the terminal what exactly it is doing within the compiler. 
 
   <i>(default: False)</i>
     
 * <b> -s, --stoichiometry</b>
 
- In case a protein is homodimer the stoichiometry command will allow you to tell the program how many instances of the chain occur in the protein that is to be reconstructed. For example if the protein is a Homo-4-mer, you will have to submit (-s 4) 
+   In case a protein is homodimer the stoichiometry command will allow you to tell the program how many instances of the chain occur in the protein that is to be reconstructed. For example if the protein is a Homo-4-mer, you will have to submit (-s 4) 
 
   <i>(default: None)</i>  
   
