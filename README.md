@@ -65,6 +65,8 @@ A module is a file containing Python definitions and statements. It is important
   
 * <b>functions.py</b>: this module is composed by a set of different <b>functions</b> to solve biological and technical problems during the analysis. Thus, it is imported into the other modules in order to use the defined functions.  
 
+* <b>FileExplorer.py</b>: This class is implemented to apply the PDB.Parser package in order to convert chains within a pdb file into chain objects. It is able to do this regardless of whether the files are gziped or not. 
+
 ### Output Files
 
 It is necessary to consider that the output files will depend on the command-line options and arguments the user determines while performing the analysis. All of them will be stored in the output directory selected by the user (-o or --output-directory).
