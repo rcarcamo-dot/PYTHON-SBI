@@ -1,12 +1,15 @@
-
 import sys
 import os
 import re
+from Bio.SeqUtils import IUPACData as threetoone 
 from Bio.PDB import PDBParser
-
-
+from Bio.PDB import Chain
+import Bio
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
 
 class IncorrectInput(NameError):
+	""" a function that tells whether or not a directory name is infact a directory"""
 	def __init__(self,input):
 		self.input = input
 	def __str__(self):
@@ -48,6 +51,21 @@ def get_backbone_atoms_nucleicacids (chain):
 			c4_atoms.append(residue["C4\'"])
 	return c4_atoms
 
+
+""" get sequence is supposed to return the full sequence of the chain"""
+
+
+def get_sequence (chain):
+	""" Retrieves and returns the sequence of a chain"""
+	sequence = ""
+	for residue in chain:
+		if residue.get_id()[0] == " " and residue.has_id("CA"):
+			addition = threetoone.protein_letters_3to1[residue.get_resname().capitalize()]
+			sequence = sequence + addition
+
+	return sequence
+
+
 def get_molecule_type (chain):
 	""" This function identifies the molecule type (RNA, DNA, PROTEIN) of a given chain and returns it as a string. """
 	# Creates a list for each DNA and RNA chain with all possible letter for eachone.
@@ -67,34 +85,78 @@ def get_molecule_type (chain):
 	return molecule_type
 
 
-def process_stoichiometry:
+def ensure_no_clashing(model, growth_chain):
+	""" ensures that the new chain isnt interfering (clashing) with any of the existing 
+	chains that in out model. Returns True if it isnt and false if it does"""
+	clashing = set()
+	model_atom_list = Bio.PDB.Selection.unfold_entities(model, "A")
+	Neighbors = Bio.PDB.NeighborSearch(model_atom_list)
 
-    stoich = options.stoichiometry
-    stoich_dict = {}
-    i = 0
-    j = 0
-    while i < len(stoich):
-        if stoich[i].isalpha():
-            stoich_dict[stoich[i]] = ""
-            j += 1
-            while stoich[j].isdigit():
-                stoich_dict[stoich[i]] += str(stoich[j])
-                if j < (len(stoich) - 1):
-                    j += 1
-                else:
-                    break
-        i += 1
-        j = i
+	for atoms in growth_chain.get_atoms():
+		location = atoms.get_coord()
+		matches = Neighbors.search(location, 1.2, level = "C")
+		for result in matches:
+			if result != growth_chain:
+				clashing.add(result)
+	if len(clashing) == 0:
+		return True
+	else:
+		return False
 
-    stoich_dict = {x: int(y) for x, y in stoich_dict.items()}
-    k = sum(list(stoich_dict.values()))
+def prep_superimpose(fixed_chain, moving_chain):
+	""" This function takes two chains and prepares them for superimposing.
+	it makes sure that all of teh residues will be alignable. Otherwise we wont be able to get the correct 
+	rot and trans information"""
+	fixed_chain = fixed_chain
+	moving_chain = moving_chain
+	fixed_chain_sequence = get_sequence(fixed_chain) 
+	moving_chain_sequence = get_sequence(moving_chain)
 
-    if options.verbose:
-        sys.stderr.write("Stoichiometry: %s\n" % options.stoichiometry)
-	
-def check_stoichiometry:
-    stoich_chains = set(list(similar_chains.values()))
+	alignments = pairwise2.align.globalxx(fixed_chain_sequence, moving_chain_sequence)
 
-    if len(stoich_chains) < len(stoich_dict):
-        raise ValueError("Unmatching stoichiometry: Provided stoichiometry contains %d different chains, but "
-                         "the input PDBs only have %d unique chains." % (len(stoich_dict), len(stoich_set)))
+	fixed_chain_sequence = alignments[0][0]
+	moving_chain_sequence = alignments[0][1]
+
+	fixedchain_pattern = []
+	movingchain_pattern = []
+
+	for res1, res2 in zip(fixed_chain_sequence, moving_chain_sequence):
+		if res1 == res2:
+			fixedchain_pattern.append(1)
+			movingchain_pattern.append(1)
+		elif res1 == '-':
+			movingchain_pattern.append(0)
+		elif res2 == '-':
+			fixedchain_pattern.append(0)
+	chains_pattern = (fixedchain_pattern, movingchain_pattern)
+	return chains_pattern
+
+def get_worked_chains(fixed_chain, moving_chain):
+	""" This takes two chains and applies the patterin gained from the prep superimpose
+	function and applies it to the sequence. Basically if a residue is not shared it is not 
+	used in the superimposition """
+	new_fixed_chain = Bio.PDB.Chain.Chain('X')
+	new_moving_chain = Bio.PDB.Chain.Chain('Y')
+	fixed_chain = fixed_chain
+	moving_chain = moving_chain
+	for residue, pattern in zip(fixed_chain.get_residues(), prep_superimpose(fixed_chain, moving_chain)[0]):
+		if pattern == 1:
+			new_fixed_chain.add(residue.copy())
+	for residue, pattern in zip(moving_chain.get_residues(), prep_superimpose(fixed_chain, moving_chain)[1]):
+		if pattern == 1:
+			new_moving_chain.add(residue.copy())
+	return (new_fixed_chain,new_moving_chain)
+
+def get_the_atoms(chain):
+	""" retrieves a list of the atoms contained in a chain """
+	if get_molecule_type(chain) == "Protein":
+		atoms = list(get_backbone_atoms_protein(chain))
+	else:
+		atoms = list (get_backbone_atoms_nucleicacids(chain))
+	return atoms
+
+
+
+
+
+

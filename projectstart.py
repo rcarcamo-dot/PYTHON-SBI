@@ -275,6 +275,13 @@ of that homomer in the end structure."""
 
 # checking if the user gave us any stoichiometry input
 if options.stoichiometry != None:
+	if options.verbose:
+		print("Creating a file to place the models in if it doesn't exist yet...\n\n")
+
+	created_models = options.output  + "/created_models"
+	if not os.path.exists(created_models):
+		os.makedirs(created_models)
+
 	# variables set up to control for the amount of chains that we are going to add to the model
 	iterations = options.stoichiometry - 2
 	number_of_homos_added = 0
@@ -330,7 +337,7 @@ if options.stoichiometry != None:
 					if options.verbose:
 						print("The Protein welcomes a new chain into the fold...\n\n")
 
-
+	""" Again, everything here is repeated below and is explained there """
 
 	manualOveride = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
               'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
@@ -344,7 +351,7 @@ if options.stoichiometry != None:
 	#print(model_chain_id_contained)
 	for file in files:
 		name = file.split("_")[0]
-	model_filename = options.output +"/"+ name + ".pdb"
+	model_filename = created_models +"/"+ name + ".pdb"
 	io = Bio.PDB.PDBIO()
 	io.set_structure(working_model)
 	io.save(model_filename)
@@ -597,7 +604,7 @@ for x in working_model:
 #print(model_chain_id_contained)
 
 name = reference_file.split("_")[0]
-model_filename = options.output + "/" + name + ".pdb"
+model_filename = created_models + "/" + name + ".pdb"
 io = Bio.PDB.PDBIO()
 io.set_structure(working_model)
 io.save(model_filename)
