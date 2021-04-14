@@ -32,9 +32,6 @@ A program to construct macrocomplex given interacting pairs (protein-protein, pr
 
 https://www.python.org/download/releases/3.0/
 
-* <b>Modeller</b> 10.1 Release
-
-https://salilab.org/modeller/download_installation.html
 
 It is also recommended to have a program for interactive visualization and analysis of molecular structures and related data such as <b>Chimera</b> .
 
