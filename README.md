@@ -52,6 +52,8 @@ After finding out chains of interest, the latter step is to place the chains of 
 
 Stoichiometry is another important aspect to be taken into account when we deal with homomers.Homomers present their own unique challenge to protein complex reconstruction. In this case the program will only be dealing with a single file that contains the information about one example of how the chains will interact with each other. Because the program would not be able to reconstruct the protein with this information alone it requires additional input in the way of stoichiometry. Once our program was able to handle this last hurdle we knew that it was ready for submission. In our program, the user has to provide us with an integer of the amount of repeating chains of that homomer in the end structure.
 
+The necessity for a program that is able to construct a full scale macrocomplex out of individual interacting pairs of proteins may seem redundant when presented in the style that we have here. After all we are simply deconstructing complexes found on PDB into their individual components and then building them back up again with their interacting pairs. In the real world there are many situations where you might be left with a plethora of information on what proteins are interacting at a pair level yet not know anything of the macrocomplex which these pairs are all a part of. In vivo experimental methods such as Flurescence Resonance Energy Transfer (FRET), Strep-protein interaction experiment (SPINE) 
+
 ## Tutorial
 
 ### Installation
