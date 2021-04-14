@@ -109,7 +109,7 @@ The following <b>arguments</b> are established:
   <i>(default: 0.9)</i>  
 
 
-### Analysis of Reconstructed Macromolecules
+## Analysis of Reconstructed Macromolecules
 
 In order to analyze our program, we tested it against 3 different types of complexes. In order to analyze the quality of our program we decided that we would use the RMSD score. Since each of the protein that we worked with had a document 3D structure available on PDB we were able to simply Superimpose predicted and known structure in Chimera and calculate the RMSD. In order to superimpose, we used  matchmaker and chose to conduct chain pairing by means of the best aligning pair of chains between the known and predicted structure. We will go over the quality of the test structures again as their quality will also limit the quality of our analysis.
 
