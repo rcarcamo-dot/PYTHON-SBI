@@ -4,7 +4,6 @@ import gzip
 import os
 import FileExplorer
 import functions
-import superimposer
 import Bio.PDB
 import random
 import copy
