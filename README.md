@@ -24,7 +24,7 @@
 
 ## Description
 
-A program to construct macrocomplex given interacting pairs (protein-protein, protein-nucleic acid, protein - RNA).
+A program to construct macrocomplex given interacting pairs (protein-protein, protein-nucleic acid).
 
 ## Prerequisites
 
