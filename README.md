@@ -124,6 +124,14 @@ The very first hurdle was being able to get the program to reconstruct a very si
 ### 5FJ8 (the Complex Protein)
 The next step was to ensure that our program would work on a much more complicated protein structure. This one would contain significantly more chains as well as be bound to nucleic acid sequences instead of just other amino acid chains. To test our ability to reconstruct such a protein we selected the protein 5fj8 also supplied on the Python Aula Global web page. 5fj8 is a RNA Polymerase 3 elongation complex. On pdb it was obtained by means of Electron Microscopy at a resolution of 3.9 Angstroms. This is the lowest quality resolution that we will be using, but it isn’t that bad for EM. Again, after reconstructing the protein we superimposed the predicted and known structure in chimera. A disclaimer, because this protein complex is so large MatchMaker takes a long time to conduct the aligning to find the best chain pair. If you want to reconstruct the superimposing in a quicker fashion you could select a specific chain to use. The RMSD score obtained from the superimposition was perfect, at 0. We have included the chimera reply log under 5fj8_RMSD. We are also submitting the folder we used to reconstruct this complex (5fj8).
 
+<p align="center">
+  <img src="/5fj8.png" width="450"/>
+</p>
+
 ### 6C70 (The Homo-mer)
 Finally, we needed to be able to reconstruct a homomeric protein. In order to tackle this challenge we had to create our own files to use since none of this type were provided in the Python Aula Global. We simply searched for a known homomer on PDB. We selected 6c70 (Orco) which is a Homo-4-mer. It is a Membrane protein and acts as an odorant receptor. The structure on PDB was obtained by means of Cryo - Electron Microscopy at a resolution of 3.5 Angstroms. For a protein obtained by Cryo-EM this is a good resolution. It is not however as good a resolution as one would get by x-ray crystallography which can yield between 1.5 – 2.5 Angstroms in the high resolution end. Nonetheless, for the purposes of testing our structure this is adequate. We selected this because it counterbalances the higher resolution proteins used previously as well as applying a different method to obtain the structure than the other ones. We downloaded the pdb file from PDB and worked it up in gedit text edit. All we had to do was remove all chains but A and B which were interacting. This file we saved and submitted to our program. After reconstructing the protein we Superimposed predicted and known structures in Chimera as before and again obtained a perfect RMSD score of 0. We are submitting the reply log as 6c70_RMSD as well as the file used to reconstruct this protein. 
+
+<p align="center">
+  <img src="/6c70.png" width="450"/>
+</p>
 
